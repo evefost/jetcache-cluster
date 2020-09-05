@@ -41,6 +41,11 @@ public class ProductServiceImpl implements ProductService {
         return productResponses;
     }
 
+    /**
+     * 采用原生api缓存
+     * @param productCode
+     * @return
+     */
     @Override
     public ProductResponse getByProductCode(String productCode) {
         String pJson=null;
@@ -64,6 +69,11 @@ public class ProductServiceImpl implements ProductService {
         return productResponse;
     }
 
+    /**
+     * 基于jetcache 集群支持改造
+     * @param productCode
+     * @return
+     */
     @Cached(name = "product:",key = "#productCode",expire = 100)
     @Override
     public ProductResponse getByProductCode2(String productCode) {
@@ -94,6 +104,11 @@ public class ProductServiceImpl implements ProductService {
 
     private String productCachePrefix="product:";
 
+    /**
+     * 原生管道批是查询
+     * @param request
+     * @return
+     */
     @Override
     public List<ProductResponse> listProduct2(ProductRequest request) {
         List<String> productCodes = request.getProductCodes();
@@ -145,6 +160,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     /**
+     * 基于jetcahe 改造批量查询
      * #request.productCodes
      * #request.productCodes[0],product:xx1
      * #request.productCodes[1],product:xx2
