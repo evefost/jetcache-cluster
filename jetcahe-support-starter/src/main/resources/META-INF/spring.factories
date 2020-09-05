@@ -1,0 +1,3 @@
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+com.jetcahe.support.config.JedisConnectionAutoConfiguration
+
