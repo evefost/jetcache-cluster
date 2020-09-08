@@ -1,5 +1,6 @@
 package com.jetcahe.support.config;
 
+import com.jetcahe.support.annotation.EnableListCache;
 import org.springframework.context.annotation.AdviceMode;
 import org.springframework.context.annotation.AdviceModeImportSelector;
 import org.springframework.context.annotation.AutoProxyRegistrar;

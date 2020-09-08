@@ -6,6 +6,7 @@ import com.alicp.jetcache.anno.support.ConfigMap;
 import com.alicp.jetcache.autoconfigure.AutoConfigureBeans;
 import com.alicp.jetcache.autoconfigure.ConfigTree;
 import com.alicp.jetcache.autoconfigure.ExternalCacheAutoInit;
+import com.jetcahe.support.annotation.EnableListCache;
 import com.jetcahe.support.aop.ClusterJetCacheInterceptor;
 import com.jetcahe.support.aop.BatchCacheInterceptor;
 import com.jetcahe.support.extend.BatchCacheAdvisor;

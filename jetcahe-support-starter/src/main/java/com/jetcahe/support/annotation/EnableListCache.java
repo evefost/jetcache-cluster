@@ -1,5 +1,6 @@
-package com.jetcahe.support.config;
+package com.jetcahe.support.annotation;
 
+import com.jetcahe.support.config.BatchConfigSelector;
 import org.springframework.context.annotation.AdviceMode;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.Ordered;
