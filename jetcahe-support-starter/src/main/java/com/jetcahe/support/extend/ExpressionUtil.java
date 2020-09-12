@@ -5,6 +5,7 @@ package com.jetcahe.support.extend;
 
 import com.alicp.jetcache.anno.CacheConsts;
 import com.alicp.jetcache.anno.method.CacheInvokeContext;
+import com.alicp.jetcache.anno.method.ExpressionEvaluator;
 import com.alicp.jetcache.anno.support.CacheAnnoConfig;
 import com.alicp.jetcache.anno.support.CacheUpdateAnnoConfig;
 import com.alicp.jetcache.anno.support.CachedAnnoConfig;

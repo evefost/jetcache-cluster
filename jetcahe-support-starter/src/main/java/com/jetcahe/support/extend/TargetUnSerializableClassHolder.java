@@ -1,7 +1,10 @@
 package com.jetcahe.support.extend;
 
 
-public class TargetClassHolder {
+/**
+ * @author xieyang
+ */
+public class TargetUnSerializableClassHolder {
 
     private static ThreadLocal<Class> cacheThreadLocal = new ThreadLocal<Class>() {
         @Override

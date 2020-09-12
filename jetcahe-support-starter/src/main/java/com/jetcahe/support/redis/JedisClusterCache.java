@@ -4,7 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.alicp.jetcache.*;
 import com.alicp.jetcache.external.AbstractExternalCache;
 import com.jetcahe.support.Pair;
-import com.jetcahe.support.extend.TargetClassHolder;
+import com.jetcahe.support.extend.TargetUnSerializableClassHolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import redis.clients.jedis.Jedis;
@@ -70,7 +70,7 @@ public class JedisClusterCache<K, V> extends AbstractExternalCache<K, V> {
             if (bytes != null) {
                 CacheValueHolder<V> holder = new CacheValueHolder();
                 String targetJson = new String(bytes);
-                Class<V> aClass = TargetClassHolder.get();
+                Class<V> aClass = TargetUnSerializableClassHolder.get();
                 V parse = JSON.parseObject(targetJson, aClass);
                 holder.setValue(parse);
                 return new CacheGetResult(CacheResultCode.SUCCESS, null, holder);

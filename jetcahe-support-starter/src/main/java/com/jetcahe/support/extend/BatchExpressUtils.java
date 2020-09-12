@@ -1,13 +1,14 @@
 package com.jetcahe.support.extend;
 
+
 import com.alicp.jetcache.CacheException;
 import com.alicp.jetcache.anno.method.CacheInvokeConfig;
 import com.alicp.jetcache.anno.method.CacheInvokeContext;
 import com.alicp.jetcache.anno.support.CacheAnnoConfig;
-import com.jetcahe.support.Pair;
 import com.jetcahe.support.BaseParamParseResult;
 import com.jetcahe.support.InParamParseResult;
 import com.jetcahe.support.OutParamParseResult;
+import com.jetcahe.support.Pair;
 import org.springframework.core.DefaultParameterNameDiscoverer;
 import org.springframework.core.ParameterNameDiscoverer;
 import org.springframework.expression.EvaluationContext;
@@ -20,15 +21,15 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Function;
 
 /**
- * 主要实现支持批量表达式解释
+ * 批量表达式解释工具
  * @author xieyang
  */
-public  class BatchSpelEvaluator implements Function<Object, Object> {
+public class BatchExpressUtils {
 
     private static ExpressionParser parser;
+
     private static ParameterNameDiscoverer parameterNameDiscoverer;
 
     static {
@@ -40,7 +41,7 @@ public  class BatchSpelEvaluator implements Function<Object, Object> {
                 Constructor<SpelParserConfiguration> c = SpelParserConfiguration.class
                         .getConstructor(modeClass, ClassLoader.class);
                 Object mode = modeClass.getField("IMMEDIATE").get(null);
-                SpelParserConfiguration config = c.newInstance(mode, BatchSpelEvaluator.class.getClassLoader());
+                SpelParserConfiguration config = c.newInstance(mode, BatchExpressUtils.class.getClassLoader());
                 parser = new SpelExpressionParser(config);
             } catch (Exception e) {
                 throw new CacheException(e);
@@ -51,40 +52,32 @@ public  class BatchSpelEvaluator implements Function<Object, Object> {
         parameterNameDiscoverer = new DefaultParameterNameDiscoverer();
     }
 
-    private String[] parameterNames;
-
-    public BatchSpelEvaluator(String script, Method defineMethod) {
-        if (defineMethod.getParameterCount() > 0) {
-            parameterNames = parameterNameDiscoverer.getParameterNames(defineMethod);
-        }
-    }
-
-    @Override
-    public InParamParseResult apply(Object rootObject) {
-        EvaluationContext context = new StandardEvaluationContext(rootObject);
-        CacheInvokeContext cic = (CacheInvokeContext) rootObject;
+    public static InParamParseResult evalKey(CacheInvokeContext cic){
+        EvaluationContext context = new StandardEvaluationContext(cic);
         CacheInvokeConfig cacheInvokeConfig = cic.getCacheInvokeConfig();
         CacheAnnoConfig cachedAnnoConfig = cacheInvokeConfig.getCachedAnnoConfig();
-        if(cachedAnnoConfig== null && !cacheInvokeConfig.getInvalidateAnnoConfigs().isEmpty()){
-            cachedAnnoConfig = cacheInvokeConfig.getInvalidateAnnoConfigs().get(0);
-        }
+        //todo
+//        if(cachedAnnoConfig== null && cacheInvokeConfig.getInvalidateAnnoConfig() != null){
+//            cachedAnnoConfig = cacheInvokeConfig.getInvalidateAnnoConfig();
+//        }
         String key = cachedAnnoConfig.getKey();
+        Method defineMethod = cachedAnnoConfig.getDefineMethod();
+        String[] parameterNames  = parameterNameDiscoverer.getParameterNames(defineMethod);
         if (parameterNames != null) {
             for (int i = 0; i < parameterNames.length; i++) {
                 context.setVariable(parameterNames[i], cic.getArgs()[i]);
             }
         }
         context.setVariable("result", cic.getResult());
-        InParamParseResult paramParseResult = parseInParams(key, parser, context, parameterNames);
+        InParamParseResult paramParseResult = parseInParams(key, context, parameterNames);
         return paramParseResult;
     }
-
 
     /**
      * @param srcScript 注解上的脚本
      * @return
      */
-    public static InParamParseResult parseInParams(String srcScript, ExpressionParser parser, EvaluationContext context, String[] parameterNames) {
+    public static InParamParseResult parseInParams(String srcScript, EvaluationContext context, String[] parameterNames) {
         String listName = findListName(srcScript);
         assert listName != null;
         String listScript = "#"+listName;
@@ -115,8 +108,8 @@ public  class BatchSpelEvaluator implements Function<Object, Object> {
     }
 
 
-    public static OutParamParseResult parseOutParams(String srcScript, ExpressionParser parser, EvaluationContext context) {
-        BaseParamParseResult baseParamParseResult = parseInParams(srcScript, parser, context, null);
+    public static OutParamParseResult parseOutParams(String srcScript, EvaluationContext context) {
+        BaseParamParseResult baseParamParseResult = parseInParams(srcScript,context, null);
         OutParamParseResult parseResult = new OutParamParseResult();
         parseResult.setContext(context);
         parseResult.setParser(parser);
@@ -141,4 +134,7 @@ public  class BatchSpelEvaluator implements Function<Object, Object> {
         }
         return listName;
     }
+
+
+
 }

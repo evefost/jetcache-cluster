@@ -17,13 +17,13 @@ import java.util.List;
  */
 public interface UserService {
 
-    @Cached(name = "loadUser", expire = 100,cacheType = CacheType.LOCAL)
+    @Cached(name = "loadUser", localExpire = 100,cacheType = CacheType.LOCAL)
     User loadUser(long userId);
 
-    @Cached(name = "loadUser",key = "#person.id+':'+#user.userId",expire = 100,cacheType = CacheType.LOCAL)
+    @Cached(name = "loadUser",key = "#person.id+':'+#user.userId",localExpire = 100,cacheType = CacheType.LOCAL)
     User loadUser(User user, Person person);
 
-    @ListCached(name = "loadUser",key = "#users[.userId",returnKey = "#returnResult[.userId",expire = 100,cacheType = CacheType.LOCAL)
+    @ListCached(name = "loadUser",key = "#users[.userId",returnKey = "#returnResult[.userId",localExpire = 100,cacheType = CacheType.LOCAL)
     List<User> listUser(List<User> users);
 
     /**
@@ -32,11 +32,11 @@ public interface UserService {
      * @param users
      * @return
      */
-    @ListCached(name = "loadUser",key = "'storeId:'+#storeId+':userId:'+#users[.userId+':'+#users[.userName",expire = 100,cacheType = CacheType.LOCAL)
+    @ListCached(name = "loadUser",key = "'storeId:'+#storeId+':userId:'+#users[.userId+':'+#users[.userName",expire = 100,cacheType = CacheType.REMOTE)
     List<User> listUser(Integer storeId,List<User> users);
 
 
-    @ListCached(name = "loadUser",key = "#tenant.storeId+':'+#tenant.users[.userId",returnKey = "#tenant.storeId+':'+#returnList[.userId",expire = 100,cacheType = CacheType.LOCAL)
+    @ListCached(name = "loadUser",key = "#tenant.storeId+':'+#tenant.users[.userId",returnKey = "#tenant.storeId+':'+#returnList[.userId",expire = 100,cacheType = CacheType.REMOTE)
     List<User> listUserByTenant(Tenant tenant);
 
     /**

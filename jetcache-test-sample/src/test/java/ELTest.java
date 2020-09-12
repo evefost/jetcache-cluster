@@ -1,7 +1,7 @@
 import com.jetcahe.support.Pair;
-import com.jetcahe.support.extend.BatchSpelEvaluator;
 import com.jetcahe.support.InParamParseResult;
 import com.jetcahe.support.OutParamParseResult;
+import com.jetcahe.support.extend.BatchExpressUtils;
 import jetcache.samples.Tenant;
 import jetcache.samples.User;
 import org.junit.Before;
@@ -199,7 +199,7 @@ public class ELTest {
         paramList.add(user3);
         String inScript ="'key:'+#paramList[.userId";
         context.setVariable("paramList",paramList);
-        InParamParseResult inParamParseResult = BatchSpelEvaluator.parseInParams(inScript, parser, context, null);
+        InParamParseResult inParamParseResult = BatchExpressUtils.parseInParams(inScript, context, null);
         List<Pair<Object, Object>> elementTargetValuePairs = inParamParseResult.getElementTargetValuePairs();
         List<String> allKey = elementTargetValuePairs.stream().map(p -> p.getKey().toString()).collect(Collectors.toList());
         System.out.println(allKey);
@@ -214,7 +214,7 @@ public class ELTest {
         dbUsers.add(user3);
         String outScript ="'key:'+#returnList[.userId";
         context.setVariable("returnList",dbUsers);
-        OutParamParseResult outParamParseResult = BatchSpelEvaluator.parseOutParams(outScript, parser, context);
+        OutParamParseResult outParamParseResult = BatchExpressUtils.parseOutParams(outScript,context);
         List<Pair<Object, Object>> outEmlementPairs = outParamParseResult.getElementTargetValuePairs();
         List<String> dbValueKeys = outEmlementPairs.stream().map(p -> p.getKey().toString()).collect(Collectors.toList());
         List<String> cacheHasValueKeys = cachePairs.stream().filter(p->p.getValue() != null).map(p -> p.getKey()).collect(Collectors.toList());

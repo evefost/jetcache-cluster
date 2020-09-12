@@ -1,5 +1,6 @@
 package com.jetcahe.support.config;
 
+import com.jetcahe.support.annotation.EnableExtendCache;
 import org.springframework.context.annotation.AdviceMode;
 import org.springframework.context.annotation.AdviceModeImportSelector;
 import org.springframework.context.annotation.AutoProxyRegistrar;
@@ -11,7 +12,7 @@ import java.util.List;
  * Created on 2016/11/16.
  *
  */
-public class BatchConfigSelector extends AdviceModeImportSelector<EnableListCache> {
+public class BatchConfigSelector extends AdviceModeImportSelector<EnableExtendCache> {
 
     @Override
     public String[] selectImports(AdviceMode adviceMode) {

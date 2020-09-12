@@ -1,6 +1,7 @@
 package com.jetcahe.support.extend;
 
 import com.alicp.jetcache.anno.support.CachedAnnoConfig;
+import com.alicp.jetcache.anno.support.GlobalCacheConfig;
 
 /**
  * @author xieyang
@@ -26,6 +27,16 @@ public class BatchCachedAnnoConfig extends CachedAnnoConfig {
      * hash操作的field
      */
     private String hashField;
+
+    private GlobalCacheConfig globalCacheConfig;
+
+    public GlobalCacheConfig getGlobalCacheConfig() {
+        return globalCacheConfig;
+    }
+
+    public void setGlobalCacheConfig(GlobalCacheConfig globalCacheConfig) {
+        this.globalCacheConfig = globalCacheConfig;
+    }
 
     public String getReturnListName() {
         return returnListName;

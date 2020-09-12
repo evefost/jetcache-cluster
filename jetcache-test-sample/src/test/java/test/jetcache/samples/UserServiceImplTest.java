@@ -37,6 +37,7 @@ public class UserServiceImplTest extends BaseServiceTest {
         users.add(user);
         users.add(user2);
         List<User> result = userService.listUser(users);
+        result = userService.listUser(users);
         assert result.size() > 0;
     }
 

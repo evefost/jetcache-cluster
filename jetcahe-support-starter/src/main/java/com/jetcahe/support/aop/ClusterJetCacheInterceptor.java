@@ -12,7 +12,9 @@ import com.alicp.jetcache.anno.support.CachedAnnoConfig;
 import com.alicp.jetcache.anno.support.ConfigMap;
 import com.alicp.jetcache.anno.support.ConfigProvider;
 import com.alicp.jetcache.anno.support.GlobalCacheConfig;
-import com.jetcahe.support.extend.TargetClassHolder;
+import com.jetcahe.support.extend.BatchCachedAnnoConfig;
+import com.jetcahe.support.extend.ExtendCacheHandler;
+import com.jetcahe.support.extend.TargetUnSerializableClassHolder;
 import org.aopalliance.intercept.MethodInvocation;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -69,17 +71,20 @@ public class ClusterJetCacheInterceptor  extends JetCacheInterceptor {
         context.setHiddenPackages(globalCacheConfig.getHiddenPackages());
         //
         CachedAnnoConfig cachedConfig = cac.getCachedAnnoConfig();
+        if(cachedConfig instanceof BatchCachedAnnoConfig){
+            ((BatchCachedAnnoConfig)cachedConfig).setGlobalCacheConfig(globalCacheConfig);
+        }
         boolean isCached = false;
         if (cachedConfig != null && cachedConfig.isEnabled()) {
             isCached =true;
             Class<?> returnType = method.getReturnType();
-            TargetClassHolder.set(returnType);
+            TargetUnSerializableClassHolder.set(returnType);
         }
         try {
-            return CacheHandler.invoke(context);
+            return ExtendCacheHandler.invoke(context);
         }finally {
             if(isCached){
-                TargetClassHolder.remove();
+                TargetUnSerializableClassHolder.remove();
             }
         }
     }

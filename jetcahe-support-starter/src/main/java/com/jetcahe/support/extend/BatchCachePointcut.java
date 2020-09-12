@@ -36,8 +36,7 @@ public class BatchCachePointcut extends CachePointcut {
             return true;
         } else {
             cac = new CacheInvokeConfig();
-            BatchCacheConfigUtil.parse(cac, method);
-
+            ExtendCacheConfigUtil.parse(cac, method);
             String name = method.getName();
             Class<?>[] paramTypes = method.getParameterTypes();
             parseByTargetClass(cac, targetClass, name, paramTypes);
@@ -66,7 +65,7 @@ public class BatchCachePointcut extends CachePointcut {
             Method[] methods = clazz.getDeclaredMethods();
             for (Method method : methods) {
                 if (methodMatch(name, method, paramTypes)) {
-                    BatchCacheConfigUtil.parse(cac, method);
+                    ExtendCacheConfigUtil.parse(cac, method);
                     break;
                 }
             }

@@ -1,5 +1,6 @@
-package com.jetcahe.support.config;
+package com.jetcahe.support.annotation;
 
+import com.jetcahe.support.config.BatchConfigSelector;
 import org.springframework.context.annotation.AdviceMode;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.Ordered;
@@ -13,7 +14,7 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Import({BatchConfigSelector.class})
-public @interface EnableListCache {
+public @interface EnableExtendCache {
 
     /**
      * Indicate whether subclass-based (CGLIB) proxies are to be created as opposed

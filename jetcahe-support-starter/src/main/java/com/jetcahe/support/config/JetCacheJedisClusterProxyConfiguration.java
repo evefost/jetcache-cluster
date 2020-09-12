@@ -6,8 +6,8 @@ import com.alicp.jetcache.anno.support.ConfigMap;
 import com.alicp.jetcache.autoconfigure.AutoConfigureBeans;
 import com.alicp.jetcache.autoconfigure.ConfigTree;
 import com.alicp.jetcache.autoconfigure.ExternalCacheAutoInit;
+import com.jetcahe.support.annotation.EnableExtendCache;
 import com.jetcahe.support.aop.ClusterJetCacheInterceptor;
-import com.jetcahe.support.aop.BatchCacheInterceptor;
 import com.jetcahe.support.extend.BatchCacheAdvisor;
 import com.jetcahe.support.redis.JedisClusterCacheBuilder;
 import org.springframework.beans.BeansException;
@@ -34,7 +34,7 @@ public class JetCacheJedisClusterProxyConfiguration implements ImportAware, Appl
     @Override
     public void setImportMetadata(AnnotationMetadata importMetadata) {
         this.enableMethodCache = AnnotationAttributes.fromMap(
-                importMetadata.getAnnotationAttributes(EnableListCache.class.getName(), false));
+                importMetadata.getAnnotationAttributes(EnableExtendCache.class.getName(), false));
         if (this.enableMethodCache == null) {
             throw new IllegalArgumentException(
                     "@EnableMethodCache is not present on importing class " + importMetadata.getClassName());
@@ -48,13 +48,10 @@ public class JetCacheJedisClusterProxyConfiguration implements ImportAware, Appl
 
     @Bean(name = CacheAdvisor.CACHE_ADVISOR_BEAN_NAME+"batch")
     @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
-    public BatchCacheAdvisor listCacheAdvisor() {
+    public BatchCacheAdvisor listCacheAdvisor(ClusterJetCacheInterceptor jetCacheInterceptor) {
         ConfigMap configMap = new ConfigMap();
-
-        BatchCacheInterceptor jetCacheInterceptor = new BatchCacheInterceptor();
         jetCacheInterceptor.setCacheConfigMap(configMap);
         jetCacheInterceptor.setApplicationContext(applicationContext);
-
         BatchCacheAdvisor advisor = new BatchCacheAdvisor();
         advisor.setAdviceBeanName(CacheAdvisor.CACHE_ADVISOR_BEAN_NAME);
         advisor.setAdvice(jetCacheInterceptor);
