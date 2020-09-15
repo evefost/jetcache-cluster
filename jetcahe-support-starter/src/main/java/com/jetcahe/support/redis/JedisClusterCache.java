@@ -95,8 +95,7 @@ public class JedisClusterCache<K, V> extends AbstractExternalCache<K, V> {
     protected MultiGetResult<K, V> do_GET_ALL(Set<? extends K> keys) {
         Set<String> keySet = (Set<String>) keys;
         List<String> sKeys = new ArrayList<>(keySet);
-        Class<V> targetType = null;
-
+        Class<V> targetType = TargetUnSerializableClassHolder.get();
         List<Pair<String, CacheGetResult<V>>> pairs = JedisPileLineOperator.batchReadResultPair(keySet, targetType, false, false, null);
         try {
             Map<K, CacheGetResult<V>> resultMap = new HashMap<>(pairs.size());
