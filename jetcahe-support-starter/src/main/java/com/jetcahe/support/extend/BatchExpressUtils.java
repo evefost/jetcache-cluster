@@ -56,10 +56,9 @@ public class BatchExpressUtils {
         EvaluationContext context = new StandardEvaluationContext(cic);
         CacheInvokeConfig cacheInvokeConfig = cic.getCacheInvokeConfig();
         CacheAnnoConfig cachedAnnoConfig = cacheInvokeConfig.getCachedAnnoConfig();
-        //todo
-//        if(cachedAnnoConfig== null && cacheInvokeConfig.getInvalidateAnnoConfig() != null){
-//            cachedAnnoConfig = cacheInvokeConfig.getInvalidateAnnoConfig();
-//        }
+        if(cachedAnnoConfig== null && cacheInvokeConfig.getInvalidateAnnoConfigs() != null){
+            cachedAnnoConfig = cacheInvokeConfig.getInvalidateAnnoConfigs().get(0);
+        }
         String key = cachedAnnoConfig.getKey();
         Method defineMethod = cachedAnnoConfig.getDefineMethod();
         String[] parameterNames  = parameterNameDiscoverer.getParameterNames(defineMethod);

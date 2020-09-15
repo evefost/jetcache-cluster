@@ -1,33 +1,34 @@
 package com.jetcahe.support;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author xieyang
  */
-public class CacheCompositeResult {
+public class CacheCompositeResult<V> {
 
-    private List<Object> caches;
+    private List<V> caches;
 
-    private List<String> noCacheKeys;
+    private Set<String> noCacheKeys;
 
     private List<Object> noCacheParams;
 
     private InParamParseResult inParamParseResult;
 
-    public List<String> getNoCacheKeys() {
+    public Set<String> getNoCacheKeys() {
         return noCacheKeys;
     }
 
-    public void setNoCacheKeys(List<String> noCacheKeys) {
+    public void setNoCacheKeys(Set<String> noCacheKeys) {
         this.noCacheKeys = noCacheKeys;
     }
 
-    public List<Object> getCaches() {
+    public List<V> getCaches() {
         return caches;
     }
 
-    public void setCaches(List<Object> caches) {
+    public void setCaches(List<V> caches) {
         this.caches = caches;
     }
 

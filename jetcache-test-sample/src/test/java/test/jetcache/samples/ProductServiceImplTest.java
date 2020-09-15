@@ -62,6 +62,7 @@ public class ProductServiceImplTest extends BaseServiceTest {
     public void testListProduct2() throws Exception {
         ProductRequest request = buildRequest(2);
         List<ProductResponse> productResponses = productService.listProduct2(request);
+        productResponses = productService.listProduct3(request);
         request = buildRequest(5);
         List<ProductResponse> productResponses2 = productService.listProduct2(request);
         System.out.println(productResponses2);
@@ -79,6 +80,7 @@ public class ProductServiceImplTest extends BaseServiceTest {
         List<ProductResponse> productResponses = productService.listProduct3(request);
         request = buildRequest(5);
         List<ProductResponse> productResponses2 = productService.listProduct3(request);
+        productResponses2 = productService.listProduct3(request);
         System.out.println(productResponses2);
         productService.batchDelete(request);
         System.out.println("sss");

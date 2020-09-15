@@ -1,6 +1,7 @@
 package com.jetcahe.support.redis;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.TypeReference;
 import com.alicp.jetcache.*;
 import com.alicp.jetcache.external.AbstractExternalCache;
 import com.jetcahe.support.Pair;
@@ -68,12 +69,19 @@ public class JedisClusterCache<K, V> extends AbstractExternalCache<K, V> {
         try (Jedis jedis = getReadPool((String) key).getResource()) {
             byte[] bytes = jedis.get(((String) key).getBytes());
             if (bytes != null) {
-                CacheValueHolder<V> holder = new CacheValueHolder();
-                String targetJson = new String(bytes);
+                String holderJson = new String(bytes);
+                CacheValueHolder<String> holder = JSON.parseObject(holderJson, new TypeReference<CacheValueHolder<String>>() {
+                });
+                if (System.currentTimeMillis() >= holder.getExpireTime()) {
+                    return CacheGetResult.EXPIRED_WITHOUT_MSG;
+                }
+                CacheValueHolder<V> targetHolder = new CacheValueHolder<>();
+                targetHolder.setAccessTime(holder.getAccessTime());
+                targetHolder.setExpireTime(holder.getExpireTime());
                 Class<V> aClass = TargetUnSerializableClassHolder.get();
-                V parse = JSON.parseObject(targetJson, aClass);
-                holder.setValue(parse);
-                return new CacheGetResult(CacheResultCode.SUCCESS, null, holder);
+                V parse = JSON.parseObject(holder.getValue(), aClass);
+                targetHolder.setValue(parse);
+                return new CacheGetResult(CacheResultCode.SUCCESS, null, targetHolder);
             } else {
                 return CacheGetResult.NOT_EXISTS_WITHOUT_MSG;
             }
@@ -88,24 +96,15 @@ public class JedisClusterCache<K, V> extends AbstractExternalCache<K, V> {
         Set<String> keySet = (Set<String>) keys;
         List<String> sKeys = new ArrayList<>(keySet);
         Class<V> targetType = null;
-        List<Pair<String, V>> pairs = JedisPileLineOperator.batchReadPair(sKeys, targetType);
+
+        List<Pair<String, CacheGetResult<V>>> pairs = JedisPileLineOperator.batchReadResultPair(keySet, targetType, false, false, null);
         try {
             Map<K, CacheGetResult<V>> resultMap = new HashMap<>(pairs.size());
             for (int i = 0; i < pairs.size(); i++) {
-                Pair pair = pairs.get(i);
+                Pair<String, CacheGetResult<V>> pair = pairs.get(i);
                 K key = (K) pair.getKey();
-                Object value = pair.getValue();
-                if (value != null) {
-                    CacheValueHolder<V> holder = (CacheValueHolder<V>) valueDecoder.apply((byte[]) value);
-                    if (System.currentTimeMillis() >= holder.getExpireTime()) {
-                        resultMap.put(key, CacheGetResult.EXPIRED_WITHOUT_MSG);
-                    } else {
-                        CacheGetResult<V> r = new CacheGetResult<V>(CacheResultCode.SUCCESS, null, holder);
-                        resultMap.put(key, r);
-                    }
-                } else {
-                    resultMap.put(key, CacheGetResult.NOT_EXISTS_WITHOUT_MSG);
-                }
+                CacheGetResult<V> value = pair.getValue();
+                resultMap.put(key,value);
             }
             return new MultiGetResult<K, V>(CacheResultCode.SUCCESS, null, resultMap);
         } catch (Exception ex) {
@@ -119,7 +118,7 @@ public class JedisClusterCache<K, V> extends AbstractExternalCache<K, V> {
     protected CacheResult do_PUT(K key, V value, long expireAfterWrite, TimeUnit timeUnit) {
         try (Jedis jedis = getReadPool((String) key).getResource()) {
             CacheValueHolder<V> holder = new CacheValueHolder(value, timeUnit.toMillis(expireAfterWrite));
-            String rt = jedis.psetex((String) key, timeUnit.toMillis(expireAfterWrite), JSON.toJSONString(value));
+            String rt = jedis.psetex((String) key, timeUnit.toMillis(expireAfterWrite), JSON.toJSONString(holder));
             if ("OK".equals(rt)) {
                 return CacheResult.SUCCESS_WITHOUT_MSG;
             } else {
@@ -161,7 +160,13 @@ public class JedisClusterCache<K, V> extends AbstractExternalCache<K, V> {
 
     @Override
     protected CacheResult do_REMOVE_ALL(Set<? extends K> keys) {
-        throw new RuntimeException("不支持的操作");
+        try  {
+            JedisPileLineOperator.batchDelete((Set<String>) keys);
+            return CacheResult.SUCCESS_WITHOUT_MSG;
+        } catch (Exception ex) {
+            logError("REMOVE_ALL", "keys(" + keys.size() + ")", ex);
+            return new CacheResult(ex);
+        }
     }
 
     @Override

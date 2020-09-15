@@ -153,7 +153,7 @@ public class ExtendCacheHandler implements InvocationHandler {
         }
         //处理批量调用
         if(annoConfig instanceof BatchCacheInvalidateAnnoConfig){
-            BatchInvoker.doInvalidate(context,annoConfig);
+            BatchInvoker.doInvalidate(context,cache,annoConfig);
             return;
         }
         Object key = ExpressionUtil.evalKey(context, annoConfig);

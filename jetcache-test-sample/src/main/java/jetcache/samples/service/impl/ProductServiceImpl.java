@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -113,7 +114,7 @@ public class ProductServiceImpl implements ProductService {
     public List<ProductResponse> listProduct2(ProductRequest request) {
         List<String> productCodes = request.getProductCodes();
         Map<String/*cacheKey*/, String> keyProductCodeMap = productCodes.stream().map(p -> new Pair<String,String>(productCachePrefix + p, p)).collect(Collectors.toMap(Pair::getKey, Pair::getValue));
-        List<String> cacheKeys = new ArrayList<>(keyProductCodeMap.keySet());
+        Set<String> cacheKeys = keyProductCodeMap.keySet();
         //1.查缓存
         List<Pair<String/*cacheKey*/, ProductResponse>> productCachePair= null;
         try {

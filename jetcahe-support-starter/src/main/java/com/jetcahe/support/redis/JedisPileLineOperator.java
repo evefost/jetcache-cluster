@@ -2,6 +2,9 @@ package com.jetcahe.support.redis;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.TypeReference;
+import com.alicp.jetcache.CacheGetResult;
+import com.alicp.jetcache.CacheResultCode;
+import com.alicp.jetcache.CacheValueHolder;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jetcahe.support.Pair;
@@ -55,12 +58,12 @@ public class JedisPileLineOperator {
      * @param <V>
      * @return
      */
-    public static <V> List<Pair<String/*key*/, V>> batchReadPair(List<String> keys, Class<V> targetType) {
+    public static <V> List<Pair<String/*key*/, V>> batchReadPair(Set<String> keys, Class<V> targetType) {
         return batchReadPair(keys, targetType, false, false, null);
     }
 
-
     /**
+     *  还空值返回
      * 批量查询数据,key 对应值为组数类  ，返回参值对结果(结果集无序)
      * @param keys
      * @param targetType
@@ -70,7 +73,44 @@ public class JedisPileLineOperator {
      * @param <V>
      * @return
      */
-    public static <V> List<Pair<String/*key*/, V>> batchReadPair(List<String> keys, Class<V> targetType, boolean isArray, boolean isHash, String hashFieldName) {
+    public static <V> List<Pair<String/*key*/, CacheGetResult<V>>> batchReadResultPair(Set<String> keys, Class<V> targetType, boolean isArray, boolean isHash, String hashFieldName) {
+        List<Pair<String, String>> pairs = batchReadPair(keys, String.class, isArray, isHash, hashFieldName);
+        List<Pair<String/*key*/, CacheGetResult<V>>> pairHolders = new ArrayList<>(pairs.size());
+        for(Pair<String, String> pair:pairs){
+            String key = pair.getKey();
+            String value = pair.getValue();
+            if(value!= null){
+                CacheValueHolder<String> holder = JSON.parseObject(value, new TypeReference<CacheValueHolder<String>>() {
+                });
+                CacheValueHolder<V> targetHolder = new CacheValueHolder<>();
+                targetHolder.setAccessTime(holder.getAccessTime());
+                targetHolder.setExpireTime(holder.getExpireTime());
+                V targetValue = JSON.parseObject(holder.getValue(), targetType);
+                targetHolder.setValue(targetValue);
+                CacheGetResult cacheGetResult = new CacheGetResult(CacheResultCode.SUCCESS, null, targetHolder);
+                Pair<String, CacheGetResult<V>> tp = new Pair<>(key,cacheGetResult);
+                pairHolders.add(tp);
+            }else {
+                Pair<String, CacheGetResult<V>> tp = new Pair<>(key, CacheGetResult.NOT_EXISTS_WITHOUT_MSG);
+                pairHolders.add(tp);
+            }
+        }
+
+        return pairHolders;
+    }
+
+    /**
+     * boolean cacheNullWhenLoaderReturnNull
+     * 批量查询数据,key 对应值为组数类  ，返回参值对结果(结果集无序)
+     * @param keys
+     * @param targetType
+     * @param isArray
+     * @param isHash
+     * @param hashFieldName
+     * @param <V>
+     * @return
+     */
+    public static <V> List<Pair<String/*key*/, V>> batchReadPair(Set<String> keys, Class<V> targetType, boolean isArray, boolean isHash, String hashFieldName) {
 
         Map<JedisPool, List<String>> poolKeys = getReadPoolKeys(keys);
         //缓存结果集
@@ -169,7 +209,7 @@ public class JedisPileLineOperator {
      * @param <P>  入参实体
      * @return
      */
-    public static <P> Map<JedisPool, List<String>> getReadPoolKeys(List<String> keys) {
+    public static <P> Map<JedisPool, List<String>> getReadPoolKeys(Set<String> keys) {
         Map<JedisPool, List<String>> poolKeyMap = new HashMap<>();
         for (String key : keys) {
             JedisPool jedisPool = cluster.getPoolFromSlot(key);
@@ -206,7 +246,8 @@ public class JedisPileLineOperator {
             List<Pair<String, P>> poolData = poolKeys.get(jedisPool);
             poolData.forEach(pair -> {
                 P value = pair.getValue();
-                String jsonValue = covert2CacheValue(value);
+                CacheValueHolder<P> holder = new CacheValueHolder(value, seconds*1000);
+                String jsonValue = covert2CacheValue(holder);
                 if (isHash) {
                     if (hashFieldName != null) {
                         pipeline.hset(pair.getKey(), hashFieldName, jsonValue);
@@ -281,7 +322,7 @@ public class JedisPileLineOperator {
      * @param deleteKeys
      * @param <?>
      */
-    public static void batchDelete(List<String> deleteKeys) {
+    public static void batchDelete(Set<String> deleteKeys) {
         List<Pair<String, String>> queryKeyPairList = new ArrayList<>(deleteKeys.size());
         deleteKeys.forEach((key) -> queryKeyPairList.add(new Pair<>(key, key)));
         Map<JedisPool, List<String>> poolKeys = getReadPoolKeys(deleteKeys);
