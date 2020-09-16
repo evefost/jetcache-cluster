@@ -79,8 +79,8 @@ public class BatchInvoker {
         List<Object> caches = fromCache.getCaches();
         if (dbList != null) {
             caches.addAll(dbList);
-            save2Cache(dbList, inParamParseResult, cac, fromCache.getNoCacheKeys());
         }
+        save2Cache(dbList, inParamParseResult, cac, fromCache.getNoCacheKeys());
         return caches;
 
     }
@@ -197,6 +197,14 @@ public class BatchInvoker {
     }
 
     private static void save2Cache(List dbList, InParamParseResult paramParseResult, BatchCachedAnnoConfig cac, Set<String> noCacheKeys) {
+
+        if(dbList == null){
+            return;
+        }
+        boolean cacheNullValue = cac.isCacheNullValue();
+        if(dbList.isEmpty() && !cacheNullValue){
+            return;
+        }
         try {
             //根据配置信息重新生成对应的缓存key
             EvaluationContext evalContext = paramParseResult.getContext();
@@ -204,14 +212,13 @@ public class BatchInvoker {
             String returnScript = cac.getReturnKey();
             OutParamParseResult parseResult = BatchExpressUtils.parseOutParams(returnScript, evalContext);
             List<Pair<Object, Object>> retPairs = parseResult.getElementTargetValuePairs();
-            Map<Object, Object> dbKeyValueMap = retPairs.stream().collect(Collectors.toMap(p -> (cac.getName() + p.getKey()), p -> p.getValue()));
+            Map<Object, Object> dbKeyValueMap = new HashMap<>(retPairs.size());
             List<Pair<String, Object>> dbResultKeyValuePairs = new ArrayList<>();
             for (Pair<Object, Object> retPair : retPairs) {
                 String key = cac.getName() + retPair.getKey().toString();
                 Object value = retPair.getValue();
                 dbKeyValueMap.put(key, value);
             }
-            boolean cacheNullValue = cac.isCacheNullValue();
             if (cacheNullValue) {
                 noCacheKeys.forEach(key -> dbResultKeyValuePairs.add(new Pair<>(key, dbKeyValueMap.get(key))));
             } else {
