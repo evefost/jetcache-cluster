@@ -1,10 +1,12 @@
 package test.jetcache.samples;
 
+import com.alibaba.fastjson.JSON;
 import jetcache.samples.dto.request.ProductRequest;
 import jetcache.samples.dto.response.ProductResponse;
 import jetcache.samples.service.ProductService;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.StringRedisTemplate;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,6 +22,9 @@ public class ProductServiceImplTest extends BaseServiceTest {
 
     @Autowired
     private ProductService productService;
+
+    @Autowired
+    private StringRedisTemplate template;
 
     /**
      * Method: getByProductCode(String productCode)
@@ -77,13 +82,25 @@ public class ProductServiceImplTest extends BaseServiceTest {
     @Test
     public void testListProduct3() throws Exception {
         ProductRequest request = buildRequest(2);
-        List<ProductResponse> productResponses = productService.listProduct3(request);
-        request = buildRequest(5);
-        List<ProductResponse> productResponses2 = productService.listProduct3(request);
-        productResponses2 = productService.listProduct3(request);
-        System.out.println(productResponses2);
-        productService.batchDelete(request);
-        System.out.println("sss");
+        while (true){
+            Thread.sleep(2000);
+            try {
+                String aaaa = template.opsForValue().get("aaaa");
+                System.out.println("============"+aaaa);
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+
+            List<ProductResponse> productResponses = productService.listProduct3(request);
+            System.out.println(JSON.toJSONString(productResponses));
+        }
+
+//        request = buildRequest(5);
+//        List<ProductResponse> productResponses2 = productService.listProduct3(request);
+//        productResponses2 = productService.listProduct3(request);
+//        System.out.println(productResponses2);
+//        productService.batchDelete(request);
+//        System.out.println("sss");
 
     }
 

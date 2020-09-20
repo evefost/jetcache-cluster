@@ -6,7 +6,6 @@ public class ProductRequest {
 
     private Integer storeId;
 
-
     private List<String> productCodes;
 
     public Integer getStoreId() {

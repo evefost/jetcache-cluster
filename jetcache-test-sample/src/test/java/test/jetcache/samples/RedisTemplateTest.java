@@ -13,7 +13,7 @@ public class RedisTemplateTest extends BaseServiceTest {
     @Test
     public void testGet(){
         String user = redisTemplate.opsForValue().get("user");
-        redisTemplate.opsForValue().set("user","xieyang");
+//        redisTemplate.opsForValue().set("user","xieyang");
          user = redisTemplate.opsForValue().get("user");
         System.out.println("===="+user);
     }
