@@ -46,7 +46,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public List<User> listUser(Integer storeId, List<User> users) {
+    public List<User> listUser2(Integer storeId, List<User> users) {
         List<User> list = new ArrayList<>();
         User user = new User();
         user.setUserId(1);
@@ -59,6 +59,11 @@ public class UserServiceImpl implements UserService {
         list.add(user);
         list.add(user2);
         return list;
+    }
+
+    @Override
+    public void batchDelete2(Integer storeId, List<User> users) {
+
     }
 
     @Override

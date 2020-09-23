@@ -38,6 +38,7 @@ public class UserServiceImplTest extends BaseServiceTest {
         users.add(user2);
         List<User> result = userService.listUser(users);
         result = userService.listUser(users);
+        result = userService.listUser(users);
         assert result.size() > 0;
     }
 
@@ -56,11 +57,11 @@ public class UserServiceImplTest extends BaseServiceTest {
         user2.setUserName("bbb");
         users.add(user);
         users.add(user2);
-        List<User> result = userService.listUser(123, users);
-        result = userService.listUser(123, users);
-        userService.batchDelete(123, users);
-        result = userService.listUser(123, users);
-        userService.batchDelete(123, users);
+        List<User> result = userService.listUser2(123, users);
+        result = userService.listUser2(123, users);
+        userService.batchDelete2(123, users);
+        result = userService.listUser2(123, users);
+        userService.batchDelete2(123, users);
         assert result.size() > 0;
     }
 
@@ -82,6 +83,7 @@ public class UserServiceImplTest extends BaseServiceTest {
         tenant.setStoreId(1111);
         tenant.setUsers(users);
         List<User> result = userService.listUserByTenant(tenant);
+        result = userService.listUserByTenant(tenant);
         assert result.size() > 0;
     }
 

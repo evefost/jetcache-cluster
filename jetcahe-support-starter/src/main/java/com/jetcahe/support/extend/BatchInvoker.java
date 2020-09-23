@@ -132,8 +132,7 @@ public class BatchInvoker {
     private static <V> CacheCompositeResult<V> getFromLocal(CachedAnnoConfig cac,Set<String> cacheKeys, Map<Object/*key*/,/*param*/ Object> keyParamMap) {
 
         CacheCompositeResult compositeResult = new CacheCompositeResult();
-        String localCacheKey = cac.getArea() + cac.getName();
-        Cache localCache = localCacheMap.get(localCacheKey);
+        Cache localCache = localCacheMap.get(getLocalCacheMapKey(cac));
         if(localCache== null){
             compositeResult.setCaches(new ArrayList(0));
             compositeResult.setNoCacheKeys(cacheKeys);
@@ -153,6 +152,11 @@ public class BatchInvoker {
         compositeResult.setNoCacheParams(noCacheParamList);
         compositeResult.setNoCacheKeys(noCacheKeys);
         return compositeResult;
+    }
+
+    private static String getLocalCacheMapKey(CachedAnnoConfig cac){
+        String localCacheKey = cac.getArea()+"_" + cac.getName();
+        return localCacheKey;
     }
 
     private static <V> void processSingeCacheResult(String key, CacheGetResult<V> cacheResult, List<V> caches, Set<String> noCacheKeys, List<Object> noCacheParamList, Map<Object/*key*/,/*param*/ Object> keyParamMap) {
@@ -200,11 +204,16 @@ public class BatchInvoker {
 
     }
 
+    /**
+     * 获取 内部本地缓存实例，使用扩展和原生的使用同一个实例操作本地缓存
+     * @param srcCache
+     * @param cac
+     */
     private static void mapLocalCache(Cache srcCache, BatchCachedAnnoConfig cac) {
         if (cac.getCacheType().equals(CacheType.REMOTE)) {
             return;
         }
-        String localCacheMapKey = cac.getArea() + cac.getName();
+        String localCacheMapKey = getLocalCacheMapKey(cac);
         Cache abstractEmbeddedCache = localCacheMap.get(localCacheMapKey);
         if (abstractEmbeddedCache != null) {
             return;
@@ -212,6 +221,10 @@ public class BatchInvoker {
         if (srcCache instanceof ProxyCache) {
             ProxyCache proxyCache = (ProxyCache) srcCache;
             Cache targetCache = proxyCache.getTargetCache();
+            if(targetCache instanceof AbstractEmbeddedCache){
+                localCacheMap.put(localCacheMapKey, targetCache);
+                return;
+            }
             if (targetCache instanceof MultiLevelCache) {
                 MultiLevelCache multiLevelCache = (MultiLevelCache) targetCache;
                 Cache[] caches = multiLevelCache.caches();
@@ -252,7 +265,7 @@ public class BatchInvoker {
             } else {
                 dbKeyValueMap.forEach((key, value) -> dbResultKeyValuePairs.add(new Pair<String, Object>((String) key, dbKeyValueMap.get(key))));
             }
-            String localCacheKey = cac.getArea() + cac.getName();
+            String localCacheKey = getLocalCacheMapKey(cac);
             //写到缓存里
             TimeUnit timeUnit = cac.getTimeUnit();
             if (cac.getCacheType().equals(CacheType.LOCAL)) {

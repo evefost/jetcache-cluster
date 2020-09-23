@@ -39,7 +39,7 @@ public class MyServiceImpl implements MyService {
         pList.add(user);
         pList.add(user2);
 //        List<User> users = userService.listUser(pList);
-        List<User> users = userService.listUser(123,pList);
+        List<User> users = userService.listUser2(123,pList);
         Tenant tenant = new Tenant();
         tenant.setStoreId(123);
         tenant.setUsers(pList);

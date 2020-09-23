@@ -33,7 +33,14 @@ public interface UserService {
      * @return
      */
     @ListCached(name = "loadUser",key = "'storeId:'+#storeId+':userId:'+#users[.userId+':'+#users[.userName",expire = 100,cacheType = CacheType.REMOTE)
-    List<User> listUser(Integer storeId,List<User> users);
+    List<User> listUser2(Integer storeId,List<User> users);
+    /**
+     * 批量删除数据
+     * @param storeId
+     * @param users
+     */
+    @ListCacheInvalidate(name = "loadUser",key = "'storeId:'+#storeId+':userId:'+#users[.userId+':'+#users[.userName")
+    void  batchDelete2(Integer storeId,List<User> users);
 
 
     @ListCached(name = "loadUser",key = "#tenant.storeId+':'+#tenant.users[.userId",returnKey = "#tenant.storeId+':'+#returnList[.userId",expire = 100,cacheType = CacheType.REMOTE)
