@@ -190,12 +190,12 @@ public class ExtendCacheHandler implements InvocationHandler {
         if (key == null || value == ExpressionUtil.EVAL_FAILED) {
             return;
         }
-        Object newKey = rebuildKey(key,updateAnnoConfig);
+
         if (updateAnnoConfig.isMulti()) {
             if (value == null) {
                 return;
             }
-            Iterable keyIt = toIterable(newKey);
+            Iterable keyIt = toIterable(key);
             Iterable valueIt = toIterable(value);
             if (keyIt == null) {
                 logger.error("jetcache @CacheUpdate key is not instance of Iterable or array: " + updateAnnoConfig.getDefineMethod());
@@ -208,7 +208,7 @@ public class ExtendCacheHandler implements InvocationHandler {
 
             List keyList = new ArrayList();
             List valueList = new ArrayList();
-            keyIt.forEach(o -> keyList.add(o));
+            keyIt.forEach(o -> keyList.add( rebuildKey(o,updateAnnoConfig)));
             valueIt.forEach(o -> valueList.add(o));
             if (keyList.size() != valueList.size()) {
                 logger.error("jetcache @CacheUpdate key size not equals with value size: " + updateAnnoConfig.getDefineMethod());
@@ -221,6 +221,7 @@ public class ExtendCacheHandler implements InvocationHandler {
                 cache.putAll(m);
             }
         } else {
+            Object newKey = rebuildKey(key,updateAnnoConfig);
             cache.put(newKey, value);
         }
     }
