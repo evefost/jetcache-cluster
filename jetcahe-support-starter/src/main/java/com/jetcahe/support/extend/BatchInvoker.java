@@ -67,7 +67,7 @@ public class BatchInvoker {
             return fromCache.getCaches();
         }
         InParamParseResult inParamParseResult = fromCache.getInParamParseResult();
-        List<Pair<Object, Object>> originKeyParams = inParamParseResult.getElementTargetValuePairs();
+        List<Pair<Object, Object>> originKeyParams = inParamParseResult.getElementsKeyValue();
         boolean paramsNeedChange = noCacheParamList.size() != originKeyParams.size();
         List dbList;
         if (paramsNeedChange) {
@@ -94,7 +94,7 @@ public class BatchInvoker {
         //返回对应的参数，用作后续构造无缓存查库入参
 
         InParamParseResult paramParseResult = BatchExpressUtils.evalKey(context);
-        List<Pair<Object, Object>> originKeys = paramParseResult.getElementTargetValuePairs();
+        List<Pair<Object, Object>> originKeys = paramParseResult.getElementsKeyValue();
         Map<Object/*key*/, Object> keyParamMap = originKeys.stream().map((pair) -> new Pair(buildKey(cac, pair), pair.getValue())).collect(Collectors.toMap(Pair::getKey, Pair::getValue));
         //转为查缓存的key
         Set<String> allCacheKeys = originKeys.stream().map(pair -> buildKey(cac, pair)).collect(Collectors.toSet());
@@ -252,7 +252,7 @@ public class BatchInvoker {
             evalContext.setVariable(cac.getReturnListName(), dbList);
             String returnScript = cac.getReturnKey();
             OutParamParseResult parseResult = BatchExpressUtils.parseOutParams(returnScript, evalContext);
-            List<Pair<Object, Object>> retPairs = parseResult.getElementTargetValuePairs();
+            List<Pair<Object, Object>> retPairs = parseResult.getElementsKeyValue();
             Map<Object, Object> dbKeyValueMap = new HashMap<>(retPairs.size());
             List<Pair<String, Object>> dbResultKeyValuePairs = new ArrayList<>();
             for (Pair<Object, Object> retPair : retPairs) {
@@ -300,7 +300,7 @@ public class BatchInvoker {
     public static void doInvalidate(CacheInvokeContext context, Cache cache, CacheInvalidateAnnoConfig cac) {
         try {
             InParamParseResult inParamParseResult = BatchExpressUtils.evalKey(context);
-            List<Pair<Object, Object>> originKeys = inParamParseResult.getElementTargetValuePairs();
+            List<Pair<Object, Object>> originKeys = inParamParseResult.getElementsKeyValue();
             Set<String> keys = originKeys.stream().map(pair -> buildKey(cac, pair)).collect(Collectors.toSet());
             cache.removeAll(keys);
         } catch (Exception e) {

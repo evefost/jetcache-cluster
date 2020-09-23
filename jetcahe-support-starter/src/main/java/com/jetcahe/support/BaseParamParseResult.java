@@ -27,7 +27,7 @@ public class BaseParamParseResult {
     /**
      *  目标元素脚本(构造key)对应元素脚本
      */
-    protected List<Pair<Object/*elementTargetScript*/,/*elementScript*/Object>> elementTargetValuePairs;
+    protected List<Pair<Object/*elementTargetScript*/,/*elementScript*/Object>> elementsKeyValue;
 
     public String getSrcScript() {
         return srcScript;
@@ -53,12 +53,12 @@ public class BaseParamParseResult {
         this.listScript = listScript;
     }
 
-    public List<Pair<Object, Object>> getElementTargetValuePairs() {
-        return elementTargetValuePairs;
+    public List<Pair<Object, Object>> getElementsKeyValue() {
+        return elementsKeyValue;
     }
 
-    public void setElementTargetValuePairs(List<Pair<Object, Object>> elementTargetValuePairs) {
-        this.elementTargetValuePairs = elementTargetValuePairs;
+    public void setElementsKeyValue(List<Pair<Object, Object>> elementsKeyValue) {
+        this.elementsKeyValue = elementsKeyValue;
     }
 
     public ExpressionParser getParser() {

@@ -77,34 +77,47 @@ public class BatchExpressUtils {
      * @return
      */
     public static InParamParseResult parseInParams(String srcScript, EvaluationContext context, String[] parameterNames) {
+        InParamParseResult result = new InParamParseResult();
+        result.setSrcScript(srcScript);
+        result.setParser(parser);
+        result.setContext(context);
+        result.setParameterNames(parameterNames);
+
+        List<Pair<String, String>> elementKeyValueScriptPairs = parseElementsScript(srcScript, context, result);
+        List<Pair<Object,Object>> elementKeyValuePairs= parseElementsKeyValue(elementKeyValueScriptPairs,context);
+        result.setElementsKeyValue(elementKeyValuePairs);
+        return result;
+    }
+
+    private static List<Pair<String,String>> parseElementsScript(String srcScript,EvaluationContext context,InParamParseResult result){
         String listName = findListName(srcScript);
         assert listName != null;
         String listScript = "#"+listName;
         List list = (List) parser.parseExpression(listScript).getValue(context);
         //解释列表单元script,及单元目标内script
-        List<Pair<String/*elementTargetScript*/,/*elementScript*/String>> elementScriptPairs= new ArrayList<>(list.size());
+        List<Pair<String/*elementTargetScript*/,/*elementScript*/String>> elementKeyValueScriptPairs= new ArrayList<>(list.size());
         for(int i=0;i<list.size();i++){
-            String elementScript=listScript+"["+i+"]";
-            String elementTargetScript=srcScript.replace("[","["+i+"]");
-            elementScriptPairs.add(new Pair<>(elementTargetScript,elementScript));
+            String elementKeyScript=srcScript.replace("[","["+i+"]");
+            String elementValueScript=listScript+"["+i+"]";
+            elementKeyValueScriptPairs.add(new Pair<>(elementKeyScript,elementValueScript));
         }
-        //获取value
-        List<Pair<Object/*elementTargetScript*/,/*elementScript*/Object>> elementTargetValuePairs= new ArrayList<>(list.size());
-        for(Pair<String,String> pair:elementScriptPairs){
-            Object elementTargetValue = parser.parseExpression(pair.getKey()).getValue(context);
-            Object elementValue = parser.parseExpression(pair.getValue()).getValue(context);
-            elementTargetValuePairs.add(new Pair<>(elementTargetValue,elementValue));
-        }
-        InParamParseResult result = new InParamParseResult();
-        result.setElementTargetValuePairs(elementTargetValuePairs);
-        result.setSrcScript(srcScript);
         result.setListName(listName);
         result.setListScript(listScript);
-        result.setParser(parser);
-        result.setContext(context);
-        result.setParameterNames(parameterNames);
-        return result;
+        return elementKeyValueScriptPairs;
     }
+
+    private static   List<Pair<Object,Object>> parseElementsKeyValue(List<Pair<String, String>> elementKeyValueScriptPairs,EvaluationContext context){
+        List<Pair<Object/*elementTargetScript*/,/*elementScript*/Object>> elementKeyValuePairs= new ArrayList<>(elementKeyValueScriptPairs.size());
+        for(Pair<String,String> pair:elementKeyValueScriptPairs){
+            String keyScript = pair.getKey();
+            String valueScript = pair.getValue();
+            Object elementKey= parser.parseExpression(keyScript).getValue(context);
+            Object elementValue = parser.parseExpression(valueScript).getValue(context);
+            elementKeyValuePairs.add(new Pair<>(elementKey,elementValue));
+        }
+        return elementKeyValuePairs;
+    }
+
 
 
     public static OutParamParseResult parseOutParams(String srcScript, EvaluationContext context) {
@@ -112,7 +125,7 @@ public class BatchExpressUtils {
         OutParamParseResult parseResult = new OutParamParseResult();
         parseResult.setContext(context);
         parseResult.setParser(parser);
-        parseResult.setElementTargetValuePairs(baseParamParseResult.getElementTargetValuePairs());
+        parseResult.setElementsKeyValue(baseParamParseResult.getElementsKeyValue());
         parseResult.setListScript(baseParamParseResult.getListScript());
         return parseResult;
     }

@@ -200,7 +200,7 @@ public class ELTest {
         String inScript ="'key:'+#paramList[.userId";
         context.setVariable("paramList",paramList);
         InParamParseResult inParamParseResult = BatchExpressUtils.parseInParams(inScript, context, null);
-        List<Pair<Object, Object>> elementTargetValuePairs = inParamParseResult.getElementTargetValuePairs();
+        List<Pair<Object, Object>> elementTargetValuePairs = inParamParseResult.getElementsKeyValue();
         List<String> allKey = elementTargetValuePairs.stream().map(p -> p.getKey().toString()).collect(Collectors.toList());
         System.out.println(allKey);
         //无数据key=检查缓存数据+db数据
@@ -215,7 +215,7 @@ public class ELTest {
         String outScript ="'key:'+#returnList[.userId";
         context.setVariable("returnList",dbUsers);
         OutParamParseResult outParamParseResult = BatchExpressUtils.parseOutParams(outScript,context);
-        List<Pair<Object, Object>> outEmlementPairs = outParamParseResult.getElementTargetValuePairs();
+        List<Pair<Object, Object>> outEmlementPairs = outParamParseResult.getElementsKeyValue();
         List<String> dbValueKeys = outEmlementPairs.stream().map(p -> p.getKey().toString()).collect(Collectors.toList());
         List<String> cacheHasValueKeys = cachePairs.stream().filter(p->p.getValue() != null).map(p -> p.getKey()).collect(Collectors.toList());
         allKey.removeAll(dbValueKeys);
