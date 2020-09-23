@@ -1,13 +1,12 @@
 package com.jetcahe.support.extend;
 
 import com.alibaba.fastjson.JSON;
-import com.alicp.jetcache.Cache;
-import com.alicp.jetcache.CacheBuilder;
-import com.alicp.jetcache.CacheGetResult;
+import com.alicp.jetcache.*;
 import com.alicp.jetcache.anno.CacheType;
 import com.alicp.jetcache.anno.method.CacheInvokeConfig;
 import com.alicp.jetcache.anno.method.CacheInvokeContext;
 import com.alicp.jetcache.anno.support.*;
+import com.alicp.jetcache.embedded.AbstractEmbeddedCache;
 import com.jetcahe.support.CacheCompositeResult;
 
 import com.jetcahe.support.InParamParseResult;
@@ -21,6 +20,8 @@ import org.springframework.expression.EvaluationContext;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -33,7 +34,7 @@ public class BatchInvoker {
 
     private static Logger logger = LoggerFactory.getLogger(BatchInvoker.class);
 
-    private static Cache localCache;
+    private static Map<String, Cache> localCacheMap = new ConcurrentHashMap<>();
 
     private static CacheManager cacheManager;
 
@@ -57,9 +58,7 @@ public class BatchInvoker {
             logger.error("no cache with name: " + context.getMethod());
             return invokeOrigin(context);
         }
-
-
-        createLocalCache(cac);
+        mapLocalCache(cache,cac);
 
         CacheCompositeResult fromCache = getFromCache(context, cac);
         List<Object> noCacheParamList = fromCache.getNoCacheParams();
@@ -96,11 +95,11 @@ public class BatchInvoker {
 
         InParamParseResult paramParseResult = BatchExpressUtils.evalKey(context);
         List<Pair<Object, Object>> originKeys = paramParseResult.getElementTargetValuePairs();
-        Map<Object/*key*/, Object> keyParamMap = originKeys.stream().map((pair) -> new Pair(buildKey(cac,pair), pair.getValue())).collect(Collectors.toMap(Pair::getKey, Pair::getValue));
+        Map<Object/*key*/, Object> keyParamMap = originKeys.stream().map((pair) -> new Pair(buildKey(cac, pair), pair.getValue())).collect(Collectors.toMap(Pair::getKey, Pair::getValue));
         //转为查缓存的key
-        Set<String> allCacheKeys = originKeys.stream().map(pair -> buildKey(cac,pair)).collect(Collectors.toSet());
+        Set<String> allCacheKeys = originKeys.stream().map(pair -> buildKey(cac, pair)).collect(Collectors.toSet());
         if (cac.getCacheType().equals(CacheType.LOCAL)) {
-            CacheCompositeResult compositeResult = getFromLocal(allCacheKeys, keyParamMap);
+            CacheCompositeResult compositeResult = getFromLocal(cac,allCacheKeys, keyParamMap);
             compositeResult.setInParamParseResult(paramParseResult);
             return compositeResult;
         } else if (cac.getCacheType().equals(CacheType.REMOTE)) {
@@ -109,7 +108,7 @@ public class BatchInvoker {
             return compositeResult;
         }
 
-        CacheCompositeResult fromLocal = getFromLocal(allCacheKeys, keyParamMap);
+        CacheCompositeResult fromLocal = getFromLocal(cac,allCacheKeys, keyParamMap);
         Set<String> noLocalCacheKeys = fromLocal.getNoCacheKeys();
         fromLocal.setInParamParseResult(paramParseResult);
         if (noLocalCacheKeys.isEmpty()) {
@@ -130,27 +129,37 @@ public class BatchInvoker {
     }
 
 
+    private static <V> CacheCompositeResult<V> getFromLocal(CachedAnnoConfig cac,Set<String> cacheKeys, Map<Object/*key*/,/*param*/ Object> keyParamMap) {
 
-    private static <V> CacheCompositeResult<V> getFromLocal(Set<String> cacheKeys, Map<Object/*key*/,/*param*/ Object> keyParamMap) {
+        CacheCompositeResult compositeResult = new CacheCompositeResult();
+        String localCacheKey = cac.getArea() + cac.getName();
+        Cache localCache = localCacheMap.get(localCacheKey);
+        if(localCache== null){
+            compositeResult.setCaches(new ArrayList(0));
+            compositeResult.setNoCacheKeys(cacheKeys);
+            List<Object> collect = keyParamMap.values().stream().collect(Collectors.toList());
+            compositeResult.setNoCacheParams(collect);
+            return compositeResult;
+        }
+
         List<V> localCaches = new ArrayList<>(cacheKeys.size());
         Set<String> noCacheKeys = new HashSet<>();
         List<Object> noCacheParamList = new ArrayList<>();
         for (String key : cacheKeys) {
             CacheGetResult<V> cacheResult = localCache.GET(key);
-            processSingeCacheResult(key,cacheResult,localCaches,noCacheKeys,noCacheParamList,keyParamMap);
+            processSingeCacheResult(key, cacheResult, localCaches, noCacheKeys, noCacheParamList, keyParamMap);
         }
-        CacheCompositeResult compositeResult = new CacheCompositeResult();
         compositeResult.setCaches(localCaches);
         compositeResult.setNoCacheParams(noCacheParamList);
         compositeResult.setNoCacheKeys(noCacheKeys);
         return compositeResult;
     }
 
-    private static <V> void processSingeCacheResult(String key, CacheGetResult<V> cacheResult, List<V> caches , Set<String> noCacheKeys  , List<Object> noCacheParamList, Map<Object/*key*/,/*param*/ Object> keyParamMap){
+    private static <V> void processSingeCacheResult(String key, CacheGetResult<V> cacheResult, List<V> caches, Set<String> noCacheKeys, List<Object> noCacheParamList, Map<Object/*key*/,/*param*/ Object> keyParamMap) {
         if (cacheResult.isSuccess()) {
             V value = cacheResult.getValue();
             //可能存的是空值(db也没有值),因为是列表，不返回空值
-            if(value != null){
+            if (value != null) {
                 caches.add(value);
             }
         } else {
@@ -173,7 +182,7 @@ public class BatchInvoker {
             for (Pair<String, CacheGetResult<V>> pair : remoteCachePairs) {
                 String key = pair.getKey();
                 CacheGetResult<V> cacheResult = pair.getValue();
-                processSingeCacheResult(key,cacheResult,remoteCaches,noCacheKeys,noCacheParamList,keyParamMap);
+                processSingeCacheResult(key, cacheResult, remoteCaches, noCacheKeys, noCacheParamList, keyParamMap);
             }
             compositeResult.setCaches(remoteCaches);
             compositeResult.setNoCacheKeys(noCacheKeys);
@@ -191,26 +200,37 @@ public class BatchInvoker {
 
     }
 
-    private static void createLocalCache(BatchCachedAnnoConfig cac) {
-        if (localCache == null) {
-            GlobalCacheConfig globalCacheConfig = cac.getGlobalCacheConfig();
-            Map<String, CacheBuilder> localCacheBuilders = globalCacheConfig.getLocalCacheBuilders();
-            CacheBuilder aDefault = localCacheBuilders.get("default");
-            synchronized (BatchInvoker.class) {
-                if (localCache == null) {
-                    localCache = aDefault.buildCache();
+    private static void mapLocalCache(Cache srcCache, BatchCachedAnnoConfig cac) {
+        if (cac.getCacheType().equals(CacheType.REMOTE)) {
+            return;
+        }
+        String localCacheMapKey = cac.getArea() + cac.getName();
+        Cache abstractEmbeddedCache = localCacheMap.get(localCacheMapKey);
+        if (abstractEmbeddedCache != null) {
+            return;
+        }
+        if (srcCache instanceof ProxyCache) {
+            ProxyCache proxyCache = (ProxyCache) srcCache;
+            Cache targetCache = proxyCache.getTargetCache();
+            if (targetCache instanceof MultiLevelCache) {
+                MultiLevelCache multiLevelCache = (MultiLevelCache) targetCache;
+                Cache[] caches = multiLevelCache.caches();
+                for (Cache ch : caches) {
+                    if (ch instanceof AbstractEmbeddedCache) {
+                        localCacheMap.put(localCacheMapKey, ch);
+                        return;
+                    }
                 }
             }
         }
     }
 
     private static void save2Cache(List dbList, InParamParseResult paramParseResult, BatchCachedAnnoConfig cac, Set<String> noCacheKeys) {
-
-        if(dbList == null){
+        if (dbList == null) {
             return;
         }
         boolean cacheNullValue = cac.isCacheNullValue();
-        if(dbList.isEmpty() && !cacheNullValue){
+        if (dbList.isEmpty() && !cacheNullValue) {
             return;
         }
         try {
@@ -223,7 +243,7 @@ public class BatchInvoker {
             Map<Object, Object> dbKeyValueMap = new HashMap<>(retPairs.size());
             List<Pair<String, Object>> dbResultKeyValuePairs = new ArrayList<>();
             for (Pair<Object, Object> retPair : retPairs) {
-                String key = buildKey(cac,retPair);
+                String key = buildKey(cac, retPair);
                 Object value = retPair.getValue();
                 dbKeyValueMap.put(key, value);
             }
@@ -232,9 +252,14 @@ public class BatchInvoker {
             } else {
                 dbKeyValueMap.forEach((key, value) -> dbResultKeyValuePairs.add(new Pair<String, Object>((String) key, dbKeyValueMap.get(key))));
             }
+            String localCacheKey = cac.getArea() + cac.getName();
             //写到缓存里
             TimeUnit timeUnit = cac.getTimeUnit();
             if (cac.getCacheType().equals(CacheType.LOCAL)) {
+                Cache localCache = localCacheMap.get(localCacheKey);
+                if(localCache == null){
+                   return;
+                }
                 dbResultKeyValuePairs.forEach(p -> localCache.put(p.getKey(), p.getValue(), cac.getLocalExpire(), cac.getTimeUnit()));
                 return;
             } else if (cac.getCacheType().equals(CacheType.REMOTE)) {
@@ -242,8 +267,11 @@ public class BatchInvoker {
                 JedisPileLineOperator.batchWritePair(dbResultKeyValuePairs, expireSeconds, cac.isHash(), cac.getHashField());
                 return;
             }
-            //无值key = allKey - cacheKeys -dbKeys
-            dbResultKeyValuePairs.forEach(p -> localCache.put(p.getKey(), p.getValue(), cac.getLocalExpire(), cac.getTimeUnit()));
+            Cache localCache = localCacheMap.get(localCacheKey);
+            if(localCache != null){
+                dbResultKeyValuePairs.forEach(p -> localCache.put(p.getKey(), p.getValue(), cac.getLocalExpire(), cac.getTimeUnit()));
+
+            }
             long expireSeconds = timeUnit.toSeconds(cac.getExpire());
             JedisPileLineOperator.batchWritePair(dbResultKeyValuePairs, expireSeconds, cac.isHash(), cac.getHashField());
         } catch (Exception e) {
@@ -256,21 +284,20 @@ public class BatchInvoker {
     }
 
 
-    public static void doInvalidate(CacheInvokeContext context,Cache cache , CacheInvalidateAnnoConfig cac) {
+    public static void doInvalidate(CacheInvokeContext context, Cache cache, CacheInvalidateAnnoConfig cac) {
         try {
             InParamParseResult inParamParseResult = BatchExpressUtils.evalKey(context);
             List<Pair<Object, Object>> originKeys = inParamParseResult.getElementTargetValuePairs();
-            Set<String> keys = originKeys.stream().map(pair ->buildKey(cac,pair)).collect(Collectors.toSet());
-            localCache.removeAll(keys);
+            Set<String> keys = originKeys.stream().map(pair -> buildKey(cac, pair)).collect(Collectors.toSet());
             cache.removeAll(keys);
         } catch (Exception e) {
             logger.error("删缓存失败", e);
         }
     }
 
-    private static String buildKey(CacheAnnoConfig cac,Pair<Object, Object> pair){
+    private static String buildKey(CacheAnnoConfig cac, Pair<Object, Object> pair) {
         String prefix = cac.getName();
-        String cacheKey = prefix+pair.getKey().toString();
+        String cacheKey = prefix + pair.getKey().toString();
         return cacheKey;
     }
 

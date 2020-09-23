@@ -76,7 +76,7 @@ public class ProductServiceImpl implements ProductService {
      * @param productCode
      * @return
      */
-    @Cached(name = "product:",key = "#productCode",expire = 100)
+    @Cached(name = "product:",key = "#productCode",expire = 100,cacheType = CacheType.BOTH,localExpire = 100)
     @Override
     public ProductResponse getByProductCode2(String productCode) {
         ProductResponse response = new ProductResponse();

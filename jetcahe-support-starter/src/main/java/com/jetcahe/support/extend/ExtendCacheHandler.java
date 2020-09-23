@@ -160,6 +160,7 @@ public class ExtendCacheHandler implements InvocationHandler {
         if (key == null) {
             return;
         }
+
         if (annoConfig.isMulti()) {
             Iterable it = toIterable(key);
             if (it == null) {
@@ -167,10 +168,11 @@ public class ExtendCacheHandler implements InvocationHandler {
                 return;
             }
             Set keys = new HashSet();
-            it.forEach(k -> keys.add(k));
+            it.forEach(k -> keys.add(rebuildKey(k,annoConfig)));
             cache.removeAll(keys);
         } else {
-            cache.remove(key);
+            Object newKey = rebuildKey(key,annoConfig);
+            cache.remove(newKey);
         }
     }
 
@@ -183,16 +185,17 @@ public class ExtendCacheHandler implements InvocationHandler {
         if (!condition) {
             return;
         }
-        Object key = ExpressionUtil.evalKey(context, updateAnnoConfig);
+       Object key = ExpressionUtil.evalKey(context, updateAnnoConfig);
         Object value = ExpressionUtil.evalValue(context, updateAnnoConfig);
         if (key == null || value == ExpressionUtil.EVAL_FAILED) {
             return;
         }
+        Object newKey = rebuildKey(key,updateAnnoConfig);
         if (updateAnnoConfig.isMulti()) {
             if (value == null) {
                 return;
             }
-            Iterable keyIt = toIterable(key);
+            Iterable keyIt = toIterable(newKey);
             Iterable valueIt = toIterable(value);
             if (keyIt == null) {
                 logger.error("jetcache @CacheUpdate key is not instance of Iterable or array: " + updateAnnoConfig.getDefineMethod());
@@ -218,7 +221,7 @@ public class ExtendCacheHandler implements InvocationHandler {
                 cache.putAll(m);
             }
         } else {
-            cache.put(key, value);
+            cache.put(newKey, value);
         }
     }
 
@@ -239,9 +242,10 @@ public class ExtendCacheHandler implements InvocationHandler {
         if (key == null) {
             return loadAndCount(context, cache, key);
         }
-
+        //本地缓存和远统一种key
+        Object newKey = rebuildKey(key,cac);
         if (!ExpressionUtil.evalCondition(context, cic.getCachedAnnoConfig())) {
-            return loadAndCount(context, cache, key);
+            return loadAndCount(context, cache, newKey);
         }
 
 
@@ -259,11 +263,16 @@ public class ExtendCacheHandler implements InvocationHandler {
                     return !ExpressionUtil.evalPostCondition(context, cic.getCachedAnnoConfig());
                 }
             };
-            Object result = cache.computeIfAbsent(key, loader);
+            Object result = cache.computeIfAbsent(newKey, loader);
             return result;
         } catch (CacheInvokeException e) {
             throw e.getCause();
         }
+    }
+
+    private static Object rebuildKey(Object key,CacheAnnoConfig cac){
+        Object newKey = cac.getName()+key.toString();
+        return newKey;
     }
 
     private static Object loadAndCount(CacheInvokeContext context, Cache cache, Object key) throws Throwable {

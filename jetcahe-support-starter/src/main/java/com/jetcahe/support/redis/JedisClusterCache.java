@@ -184,9 +184,6 @@ public class JedisClusterCache<K, V> extends AbstractExternalCache<K, V> {
     }
 
     private String rebuildKey(Object key) {
-        if (key instanceof String) {
-            return config.getKeyPrefix()+key;
-        }
-        return config.getKeyPrefix() + key.toString();
+        return (String) key;
     }
 }

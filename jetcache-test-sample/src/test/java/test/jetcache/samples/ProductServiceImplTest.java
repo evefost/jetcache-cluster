@@ -34,6 +34,27 @@ public class ProductServiceImplTest extends BaseServiceTest {
 //TODO: Test goes here... 
     }
 
+    @Test
+    public void testListProductByCode22() throws Exception {
+        long id = Thread.currentThread().getId();
+        List<String> keys = new ArrayList<>();
+        keys.add("0001");
+        keys.add("0002");
+        keys.add("0003");
+        keys.add("0004");
+        keys.add("0005");
+        keys.add("0005");
+        keys.add("0006");
+        keys.add("0007");
+        template.opsForValue().multiGet(keys);
+        ProductResponse byProductCode2 = productService.getByProductCode2("1000");
+        byProductCode2 = productService.getByProductCode3("1000");
+        byProductCode2 = productService.getByProductCode2("0008");
+        byProductCode2 = productService.getByProductCode2("0008");
+//        List<ProductResponse> productResponses3 = productService.listProduct3(request);
+        // productService.batchDelete(request);
+        System.out.println("sss");
+    }
 
     @Test
     public void testListProductByCode2() throws Exception {
@@ -85,8 +106,8 @@ public class ProductServiceImplTest extends BaseServiceTest {
         while (true){
             Thread.sleep(2000);
             try {
-                String aaaa = template.opsForValue().get("aaaa");
-                System.out.println("============"+aaaa);
+               template.opsForValue().set("aaaa","aa",12);
+                System.out.println("============");
             }catch (Exception e){
                 e.printStackTrace();
             }
@@ -111,6 +132,24 @@ public class ProductServiceImplTest extends BaseServiceTest {
         request = buildRequest(5);
         List<ProductResponse> productResponses2 = productService.listProduct4(request.getProductCodes());
         System.out.println(productResponses2);
+        productService.batchDelete(request);
+        System.out.println("sss");
+
+    }
+
+    /**
+     * 单个与批量组合测试
+     * @throws Exception
+     */
+    @Test
+    public void singleAdnBatch() throws Exception {
+        ProductResponse byProductCode = productService.getByProductCode2("000");
+        ProductRequest request = buildRequest(2);
+        List<ProductResponse> productResponses = productService.listProduct4(request.getProductCodes());
+        request = buildRequest(5);
+        List<ProductResponse> productResponses2 = productService.listProduct4(request.getProductCodes());
+        System.out.println(productResponses2);
+        productResponses2 = productService.listProduct4(request.getProductCodes());
         productService.batchDelete(request);
         System.out.println("sss");
 
