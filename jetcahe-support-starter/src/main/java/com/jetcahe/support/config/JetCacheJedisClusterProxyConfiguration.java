@@ -3,12 +3,15 @@ package com.jetcahe.support.config;
 import com.alicp.jetcache.CacheBuilder;
 import com.alicp.jetcache.anno.aop.CacheAdvisor;
 import com.alicp.jetcache.anno.support.ConfigMap;
+import com.alicp.jetcache.anno.support.ConfigProvider;
+import com.alicp.jetcache.anno.support.SimpleCacheManager;
 import com.alicp.jetcache.autoconfigure.AutoConfigureBeans;
 import com.alicp.jetcache.autoconfigure.ConfigTree;
 import com.alicp.jetcache.autoconfigure.ExternalCacheAutoInit;
 import com.jetcahe.support.annotation.EnableExtendCache;
 import com.jetcahe.support.aop.ClusterJetCacheInterceptor;
 import com.jetcahe.support.extend.BatchCacheAdvisor;
+import com.jetcahe.support.extend.BatchInvoker;
 import com.jetcahe.support.redis.JedisClusterCacheBuilder;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +21,8 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.annotation.*;
 import org.springframework.core.annotation.AnnotationAttributes;
 import org.springframework.core.type.AnnotationMetadata;
+
+import javax.annotation.PostConstruct;
 
 /**
  * Created on 2016/11/16.
@@ -92,6 +97,13 @@ public class JetCacheJedisClusterProxyConfiguration implements ImportAware, Appl
             JedisClusterCacheBuilder clusterCacheBuilder = new JedisClusterCacheBuilder();
             return clusterCacheBuilder;
         }
+    }
+
+    @Bean
+    public BatchInvoker setManager(ConfigProvider configProvider){
+        SimpleCacheManager cacheManager = configProvider.getCacheManager();
+        BatchInvoker.setCacheManager(cacheManager);
+      return new  BatchInvoker();
     }
 
 }

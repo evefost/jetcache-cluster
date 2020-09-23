@@ -57,4 +57,11 @@
     RedisAutoConfiguration
     RedisAutoInit
     分析JedisClient 读写缓存是通过 key crc16 找到对应管道是写数据的
-    
+    String fullCacheName = area + "_" + cacheName;
+    Cache cache = cacheManager.getCacheWithoutCreate(area, cacheName);   
+    CacheContext
+    SpringConfigProvider
+      @Override
+        protected CacheContext newContext() {
+            return new SpringCacheContext(this, globalCacheConfig, applicationContext);
+        }

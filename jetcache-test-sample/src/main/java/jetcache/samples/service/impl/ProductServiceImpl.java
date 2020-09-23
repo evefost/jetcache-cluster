@@ -1,6 +1,7 @@
 package jetcache.samples.service.impl;
 
 import com.alibaba.fastjson.JSON;
+import com.alicp.jetcache.anno.CacheType;
 import com.alicp.jetcache.anno.Cached;
 import com.jetcahe.support.Pair;
 import com.jetcahe.support.annotation.ListCacheInvalidate;
@@ -78,6 +79,16 @@ public class ProductServiceImpl implements ProductService {
     @Cached(name = "product:",key = "#productCode",expire = 100)
     @Override
     public ProductResponse getByProductCode2(String productCode) {
+        ProductResponse response = new ProductResponse();
+        response.setProductCode(productCode);
+        List<SkuResponse> skuResponses = skuService.listByProductCode(productCode);
+        response.setSkuResponses(skuResponses);
+        return response;
+    }
+
+    @Cached(name = "product3:",key = "#productCode",expire = 100)
+    @Override
+    public ProductResponse getByProductCode3(String productCode) {
         ProductResponse response = new ProductResponse();
         response.setProductCode(productCode);
         List<SkuResponse> skuResponses = skuService.listByProductCode(productCode);
@@ -180,7 +191,7 @@ public class ProductServiceImpl implements ProductService {
         listProductFromDb.forEach((p)->p.setSkuResponses(productSkuMap.get(p.getProductCode())));
         return listProductFromDb;
     }
-    @ListCached(name = "product:",key = "#productCodes[",returnKey = "#[.productCode",expire = 100)
+    @ListCached(name = "product:",key = "#productCodes[",returnKey = "#[.productCode",expire = 100,cacheType = CacheType.BOTH,localExpire = 1999)
     @Override
     public List<ProductResponse> listProduct4(List<String> productCodes) {
         List<ProductResponse> listProductFromDb = getListProductFromDb(productCodes);

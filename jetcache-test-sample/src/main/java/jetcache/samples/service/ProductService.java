@@ -11,6 +11,8 @@ public interface ProductService {
 
     ProductResponse getByProductCode2(String productCode);
 
+    ProductResponse getByProductCode3(String productCode);
+
     List<ProductResponse> listProduct(ProductRequest request);
 
     List<ProductResponse> listProduct2(ProductRequest request);

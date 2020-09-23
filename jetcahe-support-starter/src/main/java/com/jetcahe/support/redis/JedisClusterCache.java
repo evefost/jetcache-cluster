@@ -11,15 +11,17 @@ import org.slf4j.LoggerFactory;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.exceptions.JedisConnectionException;
-import redis.clients.jedis.params.SetParams;
 import redis.clients.jedis.util.Pool;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 /**
- * Created on 2016/10/7.
+ * 支持jedis 客户端集群的缓存操作
  *
  * @author <a href="mailto:areyouok@gmail.com">huangli</a>
  */
@@ -66,9 +68,11 @@ public class JedisClusterCache<K, V> extends AbstractExternalCache<K, V> {
 
     @Override
     protected CacheGetResult<V> do_GET(K key) {
-        try (Jedis jedis = getReadPool((String) key).getResource()) {
-            byte[] bytes = jedis.get(((String) key).getBytes());
+        String newKey = rebuildKey(key);
+        try (Jedis jedis = getReadPool(newKey).getResource()) {
+            byte[] bytes = jedis.get((newKey).getBytes());
             if (bytes != null) {
+
                 String holderJson = new String(bytes);
                 CacheValueHolder<String> holder = JSON.parseObject(holderJson, new TypeReference<CacheValueHolder<String>>() {
                 });
@@ -94,7 +98,6 @@ public class JedisClusterCache<K, V> extends AbstractExternalCache<K, V> {
     @Override
     protected MultiGetResult<K, V> do_GET_ALL(Set<? extends K> keys) {
         Set<String> keySet = (Set<String>) keys;
-        List<String> sKeys = new ArrayList<>(keySet);
         Class<V> targetType = TargetUnSerializableClassHolder.get();
         List<Pair<String, CacheGetResult<V>>> pairs = JedisPileLineOperator.batchReadResultPair(keySet, targetType, false, false, null);
         try {
@@ -103,7 +106,7 @@ public class JedisClusterCache<K, V> extends AbstractExternalCache<K, V> {
                 Pair<String, CacheGetResult<V>> pair = pairs.get(i);
                 K key = (K) pair.getKey();
                 CacheGetResult<V> value = pair.getValue();
-                resultMap.put(key,value);
+                resultMap.put(key, value);
             }
             return new MultiGetResult<K, V>(CacheResultCode.SUCCESS, null, resultMap);
         } catch (Exception ex) {
@@ -115,9 +118,10 @@ public class JedisClusterCache<K, V> extends AbstractExternalCache<K, V> {
 
     @Override
     protected CacheResult do_PUT(K key, V value, long expireAfterWrite, TimeUnit timeUnit) {
-        try (Jedis jedis = getReadPool((String) key).getResource()) {
+        String newKey = rebuildKey(key);
+        try (Jedis jedis = getReadPool(newKey).getResource()) {
             CacheValueHolder<V> holder = new CacheValueHolder(value, timeUnit.toMillis(expireAfterWrite));
-            String rt = jedis.psetex((String) key, timeUnit.toMillis(expireAfterWrite), JSON.toJSONString(holder));
+            String rt = jedis.psetex(newKey, timeUnit.toMillis(expireAfterWrite), JSON.toJSONString(holder));
             if ("OK".equals(rt)) {
                 return CacheResult.SUCCESS_WITHOUT_MSG;
             } else {
@@ -131,16 +135,13 @@ public class JedisClusterCache<K, V> extends AbstractExternalCache<K, V> {
 
     @Override
     protected CacheResult do_PUT_ALL(Map<? extends K, ? extends V> map, long expireAfterWrite, TimeUnit timeUnit) {
-       throw new RuntimeException("不支持的操作");
+        throw new RuntimeException("不支持的操作");
     }
 
     @Override
     protected CacheResult do_REMOVE(K key) {
-        return REMOVE_impl(key, buildKey(key));
-    }
-
-    private CacheResult REMOVE_impl(Object key, byte[] newKey) {
-        try (Jedis jedis = getReadPool((String) key).getResource()) {
+        String newKey = rebuildKey(key);
+        try (Jedis jedis = getReadPool(newKey).getResource()) {
             Long rt = jedis.del(newKey);
             if (rt == null) {
                 return CacheResult.FAIL_WITHOUT_MSG;
@@ -157,9 +158,10 @@ public class JedisClusterCache<K, V> extends AbstractExternalCache<K, V> {
         }
     }
 
+
     @Override
     protected CacheResult do_REMOVE_ALL(Set<? extends K> keys) {
-        try  {
+        try {
             JedisPileLineOperator.batchDelete((Set<String>) keys);
             return CacheResult.SUCCESS_WITHOUT_MSG;
         } catch (Exception ex) {
@@ -170,24 +172,7 @@ public class JedisClusterCache<K, V> extends AbstractExternalCache<K, V> {
 
     @Override
     protected CacheResult do_PUT_IF_ABSENT(K key, V value, long expireAfterWrite, TimeUnit timeUnit) {
-        try (Jedis jedis = getReadPool((String) key).getResource()) {
-            CacheValueHolder<V> holder = new CacheValueHolder(value, timeUnit.toMillis(expireAfterWrite));
-            byte[] newKey = buildKey(key);
-            SetParams params = new SetParams();
-            params.nx()
-                    .px(timeUnit.toMillis(expireAfterWrite));
-            String rt = jedis.set(newKey, valueEncoder.apply(holder), params);
-            if ("OK".equals(rt)) {
-                return CacheResult.SUCCESS_WITHOUT_MSG;
-            } else if (rt == null) {
-                return CacheResult.EXISTS_WITHOUT_MSG;
-            } else {
-                return new CacheResult(CacheResultCode.FAIL, rt);
-            }
-        } catch (Exception ex) {
-            logError("PUT_IF_ABSENT", key, ex);
-            return new CacheResult(ex);
-        }
+        return null;
     }
 
     @Override
@@ -196,5 +181,12 @@ public class JedisClusterCache<K, V> extends AbstractExternalCache<K, V> {
             return false;
         }
         return true;
+    }
+
+    private String rebuildKey(Object key) {
+        if (key instanceof String) {
+            return config.getKeyPrefix()+key;
+        }
+        return config.getKeyPrefix() + key.toString();
     }
 }

@@ -7,8 +7,7 @@ import com.alicp.jetcache.CacheGetResult;
 import com.alicp.jetcache.anno.CacheType;
 import com.alicp.jetcache.anno.method.CacheInvokeConfig;
 import com.alicp.jetcache.anno.method.CacheInvokeContext;
-import com.alicp.jetcache.anno.support.CacheInvalidateAnnoConfig;
-import com.alicp.jetcache.anno.support.GlobalCacheConfig;
+import com.alicp.jetcache.anno.support.*;
 import com.jetcahe.support.CacheCompositeResult;
 
 import com.jetcahe.support.InParamParseResult;
@@ -36,6 +35,12 @@ public class BatchInvoker {
 
     private static Cache localCache;
 
+    private static CacheManager cacheManager;
+
+    public static void setCacheManager(CacheManager cacheManager) {
+        BatchInvoker.cacheManager = cacheManager;
+    }
+
     /**
      * 批量处理缓存
      *
@@ -52,6 +57,7 @@ public class BatchInvoker {
             logger.error("no cache with name: " + context.getMethod());
             return invokeOrigin(context);
         }
+
 
         createLocalCache(cac);
 
@@ -87,11 +93,12 @@ public class BatchInvoker {
 
     private static CacheCompositeResult getFromCache(CacheInvokeContext context, BatchCachedAnnoConfig cac) {
         //返回对应的参数，用作后续构造无缓存查库入参
+
         InParamParseResult paramParseResult = BatchExpressUtils.evalKey(context);
         List<Pair<Object, Object>> originKeys = paramParseResult.getElementTargetValuePairs();
-        Map<Object/*key*/, Object> keyParamMap = originKeys.stream().map((pair) -> new Pair(cac.getName() + pair.getKey().toString(), pair.getValue())).collect(Collectors.toMap(Pair::getKey, Pair::getValue));
+        Map<Object/*key*/, Object> keyParamMap = originKeys.stream().map((pair) -> new Pair(buildKey(cac,pair), pair.getValue())).collect(Collectors.toMap(Pair::getKey, Pair::getValue));
         //转为查缓存的key
-        Set<String> allCacheKeys = originKeys.stream().map(pair -> cac.getName() + pair.getKey().toString()).collect(Collectors.toSet());
+        Set<String> allCacheKeys = originKeys.stream().map(pair -> buildKey(cac,pair)).collect(Collectors.toSet());
         if (cac.getCacheType().equals(CacheType.LOCAL)) {
             CacheCompositeResult compositeResult = getFromLocal(allCacheKeys, keyParamMap);
             compositeResult.setInParamParseResult(paramParseResult);
@@ -121,6 +128,7 @@ public class BatchInvoker {
         return fromLocal;
 
     }
+
 
 
     private static <V> CacheCompositeResult<V> getFromLocal(Set<String> cacheKeys, Map<Object/*key*/,/*param*/ Object> keyParamMap) {
@@ -215,7 +223,7 @@ public class BatchInvoker {
             Map<Object, Object> dbKeyValueMap = new HashMap<>(retPairs.size());
             List<Pair<String, Object>> dbResultKeyValuePairs = new ArrayList<>();
             for (Pair<Object, Object> retPair : retPairs) {
-                String key = cac.getName() + retPair.getKey().toString();
+                String key = buildKey(cac,retPair);
                 Object value = retPair.getValue();
                 dbKeyValueMap.put(key, value);
             }
@@ -252,12 +260,18 @@ public class BatchInvoker {
         try {
             InParamParseResult inParamParseResult = BatchExpressUtils.evalKey(context);
             List<Pair<Object, Object>> originKeys = inParamParseResult.getElementTargetValuePairs();
-            Set<String> keys = originKeys.stream().map(pair -> cac.getName() + pair.getKey().toString()).collect(Collectors.toSet());
+            Set<String> keys = originKeys.stream().map(pair ->buildKey(cac,pair)).collect(Collectors.toSet());
             localCache.removeAll(keys);
             cache.removeAll(keys);
         } catch (Exception e) {
             logger.error("删缓存失败", e);
         }
+    }
+
+    private static String buildKey(CacheAnnoConfig cac,Pair<Object, Object> pair){
+        String prefix = cac.getName();
+        String cacheKey = prefix+pair.getKey().toString();
+        return cacheKey;
     }
 
 }

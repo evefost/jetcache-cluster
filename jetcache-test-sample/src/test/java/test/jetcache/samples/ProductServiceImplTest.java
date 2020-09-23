@@ -40,7 +40,7 @@ public class ProductServiceImplTest extends BaseServiceTest {
         long id = Thread.currentThread().getId();
 
         ProductResponse byProductCode2 = productService.getByProductCode2("1000");
-        byProductCode2 = productService.getByProductCode2("1000");
+        byProductCode2 = productService.getByProductCode3("1000");
         byProductCode2 = productService.getByProductCode2("0008");
         byProductCode2 = productService.getByProductCode2("0008");
 //        List<ProductResponse> productResponses3 = productService.listProduct3(request);

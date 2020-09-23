@@ -17,7 +17,7 @@ public class JedisPipelineCluster extends JedisCluster {
     private static final Logger logger = LoggerFactory.getLogger(JedisPipelineCluster.class);
 
     public JedisPool getPoolFromSlot(String redisKey) {
-        return getConnectionHandler().getJedisPoolFromSlot(redisKey);
+        return getConnectionHandler().getRedisPoolFromSlot(redisKey);
     }
 
     public JedisPipelineCluster(Set<HostAndPort> nodes, int timeout, int soTimeout, int maxAttempts, final GenericObjectPoolConfig poolConfig) {
@@ -79,7 +79,7 @@ public class JedisPipelineCluster extends JedisCluster {
             }
         }
 
-        private JedisPool getJedisPoolFromSlot(String redisKey) {
+        private JedisPool getRedisPoolFromSlot(String redisKey) {
             int slot = JedisClusterCRC16.getSlot(redisKey);
             JedisPool connectionPool = cache.getSlotPool(slot);
             if (connectionPool != null) {

@@ -5,6 +5,7 @@ package jetcache.samples;
 
 import com.alicp.jetcache.anno.config.EnableCreateCacheAnnotation;
 import com.alicp.jetcache.anno.config.EnableMethodCache;
+import com.alicp.jetcache.autoconfigure.JetCacheAutoConfiguration;
 import com.jetcahe.support.annotation.EnableExtendCache;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
