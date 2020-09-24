@@ -12,7 +12,6 @@ import com.jetcahe.support.CacheCompositeResult;
 import com.jetcahe.support.InParamParseResult;
 import com.jetcahe.support.OutParamParseResult;
 import com.jetcahe.support.Pair;
-import com.jetcahe.support.redis.JedisPileLineOperator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.expression.EvaluationContext;
@@ -21,7 +20,6 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 

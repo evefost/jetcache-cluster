@@ -1,4 +1,4 @@
-package com.jetcahe.support.redis;
+package com.jetcahe.support.extend;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.TypeReference;
@@ -8,6 +8,7 @@ import com.alicp.jetcache.CacheValueHolder;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jetcahe.support.Pair;
+import com.jetcahe.support.redis.JedisPipelineCluster;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanWrapper;

@@ -1,6 +1,5 @@
-package com.jetcahe.support.redis;
+package com.jetcahe.support.extend;
 
-import com.alicp.jetcache.*;
 import com.alicp.jetcache.external.ExternalCacheBuilder;
 import com.alicp.jetcache.external.ExternalCacheConfig;
 

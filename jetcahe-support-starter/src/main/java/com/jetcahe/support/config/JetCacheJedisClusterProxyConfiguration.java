@@ -12,7 +12,7 @@ import com.jetcahe.support.annotation.EnableExtendCache;
 import com.jetcahe.support.aop.ClusterJetCacheInterceptor;
 import com.jetcahe.support.extend.BatchCacheAdvisor;
 import com.jetcahe.support.extend.BatchInvoker;
-import com.jetcahe.support.redis.JedisClusterCacheBuilder;
+import com.jetcahe.support.extend.JedisClusterCacheBuilder;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
@@ -21,8 +21,6 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.annotation.*;
 import org.springframework.core.annotation.AnnotationAttributes;
 import org.springframework.core.type.AnnotationMetadata;
-
-import javax.annotation.PostConstruct;
 
 /**
  * Created on 2016/11/16.

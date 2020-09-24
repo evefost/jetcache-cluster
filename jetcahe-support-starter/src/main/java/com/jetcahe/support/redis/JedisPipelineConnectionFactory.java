@@ -1,5 +1,6 @@
 package com.jetcahe.support.redis;
 
+import com.jetcahe.support.extend.JedisPileLineOperator;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;

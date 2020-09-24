@@ -6,7 +6,7 @@ import com.alicp.jetcache.anno.Cached;
 import com.jetcahe.support.Pair;
 import com.jetcahe.support.annotation.ListCacheInvalidate;
 import com.jetcahe.support.annotation.ListCached;
-import com.jetcahe.support.redis.JedisPileLineOperator;
+import com.jetcahe.support.extend.JedisPileLineOperator;
 import jetcache.samples.dto.request.ProductRequest;
 import jetcache.samples.dto.response.ProductResponse;
 import jetcache.samples.dto.response.SkuResponse;
