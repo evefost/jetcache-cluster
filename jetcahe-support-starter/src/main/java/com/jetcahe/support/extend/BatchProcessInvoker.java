@@ -28,16 +28,16 @@ import java.util.stream.Collectors;
  *
  * @author xieyang
  */
-public class BatchInvoker {
+public class BatchProcessInvoker {
 
-    private static Logger logger = LoggerFactory.getLogger(BatchInvoker.class);
+    private static Logger logger = LoggerFactory.getLogger(BatchProcessInvoker.class);
 
     private static Map<String, Cache> localCacheMap = new ConcurrentHashMap<>();
 
     private static CacheManager cacheManager;
 
     public static void setCacheManager(CacheManager cacheManager) {
-        BatchInvoker.cacheManager = cacheManager;
+        BatchProcessInvoker.cacheManager = cacheManager;
     }
 
     /**
@@ -64,14 +64,29 @@ public class BatchInvoker {
             //缓存全部命中
             return fromCache.getCaches();
         }
+
+        List dbList = getFromDb(context,fromCache);
+        List<Object> caches = fromCache.getCaches();
+        if (dbList != null) {
+            caches.addAll(dbList);
+        }
+
+        InParamParseResult inParamParseResult = fromCache.getInParamParseResult();
+        save2Cache(dbList, inParamParseResult, cac, fromCache.getNoCacheKeys());
+        return caches;
+
+    }
+
+    private static List<Object> getFromDb(CacheInvokeContext context, CacheCompositeResult fromCache) throws Throwable {
         InParamParseResult inParamParseResult = fromCache.getInParamParseResult();
         List<Pair<Object, Object>> originKeyParams = inParamParseResult.getElementsKeyValue();
-        boolean paramsNeedChange = noCacheParamList.size() != originKeyParams.size();
+        List noCacheParams = fromCache.getNoCacheParams();
+        boolean paramsNeedChange = noCacheParams.size() != originKeyParams.size();
         List dbList;
         if (paramsNeedChange) {
             //修改入参/还原入参
             try {
-                inParamParseResult.rewriteArgsList(context.getArgs(), noCacheParamList);
+                inParamParseResult.rewriteArgsList(context.getArgs(), noCacheParams);
                 dbList = (List) invokeOrigin(context);
             } finally {
                 inParamParseResult.restoreArgsList(context.getArgs());
@@ -79,13 +94,7 @@ public class BatchInvoker {
         } else {
             dbList = (List) invokeOrigin(context);
         }
-        List<Object> caches = fromCache.getCaches();
-        if (dbList != null) {
-            caches.addAll(dbList);
-        }
-        save2Cache(dbList, inParamParseResult, cac, fromCache.getNoCacheKeys());
-        return caches;
-
+        return dbList;
     }
 
     private static CacheCompositeResult getFromCache(CacheInvokeContext context, BatchCachedAnnoConfig cac) {

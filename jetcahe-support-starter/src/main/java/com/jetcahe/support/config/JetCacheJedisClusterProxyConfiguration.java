@@ -11,7 +11,7 @@ import com.alicp.jetcache.autoconfigure.ExternalCacheAutoInit;
 import com.jetcahe.support.annotation.EnableExtendCache;
 import com.jetcahe.support.aop.ClusterJetCacheInterceptor;
 import com.jetcahe.support.extend.BatchCacheAdvisor;
-import com.jetcahe.support.extend.BatchInvoker;
+import com.jetcahe.support.extend.BatchProcessInvoker;
 import com.jetcahe.support.extend.JedisClusterCacheBuilder;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -98,10 +98,10 @@ public class JetCacheJedisClusterProxyConfiguration implements ImportAware, Appl
     }
 
     @Bean
-    public BatchInvoker setManager(ConfigProvider configProvider){
+    public BatchProcessInvoker setManager(ConfigProvider configProvider){
         SimpleCacheManager cacheManager = configProvider.getCacheManager();
-        BatchInvoker.setCacheManager(cacheManager);
-      return new  BatchInvoker();
+        BatchProcessInvoker.setCacheManager(cacheManager);
+      return new BatchProcessInvoker();
     }
 
 }

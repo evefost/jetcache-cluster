@@ -153,7 +153,7 @@ public class ExtendCacheHandler implements InvocationHandler {
         }
         //处理批量调用
         if(annoConfig instanceof BatchCacheInvalidateAnnoConfig){
-            BatchInvoker.doInvalidate(context,cache,annoConfig);
+            BatchProcessInvoker.doInvalidate(context,cache,annoConfig);
             return;
         }
         Object key = ExpressionUtil.evalKey(context, annoConfig);
@@ -237,7 +237,7 @@ public class ExtendCacheHandler implements InvocationHandler {
         }
         //处理批量调用
         if(cac instanceof BatchCachedAnnoConfig){
-            return BatchInvoker.invokeWithCached(context);
+            return BatchProcessInvoker.invokeWithCached(context);
         }
         Object key = ExpressionUtil.evalKey(context, cic.getCachedAnnoConfig());
         if (key == null) {
