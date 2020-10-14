@@ -6,6 +6,16 @@ public class SkuResponse {
 
     private String skuCode;
 
+    private SkuStockResponse skuStockResponse;
+
+    public SkuStockResponse getSkuStockResponse() {
+        return skuStockResponse;
+    }
+
+    public void setSkuStockResponse(SkuStockResponse skuStockResponse) {
+        this.skuStockResponse = skuStockResponse;
+    }
+
     public String getSkuCode() {
         return skuCode;
     }

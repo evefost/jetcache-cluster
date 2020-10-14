@@ -10,6 +10,16 @@ public class ProductResponse implements Serializable {
 
     private List<SkuResponse> skuResponses;
 
+    private List<String> images;
+
+    public List<String> getImages() {
+        return images;
+    }
+
+    public void setImages(List<String> images) {
+        this.images = images;
+    }
+
     public List<SkuResponse> getSkuResponses() {
         return skuResponses;
     }

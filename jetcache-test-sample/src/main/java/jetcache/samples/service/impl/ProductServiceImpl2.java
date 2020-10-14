@@ -7,12 +7,11 @@ import com.jetcahe.support.Pair;
 import com.jetcahe.support.annotation.ListCacheInvalidate;
 import com.jetcahe.support.annotation.ListCached;
 import com.jetcahe.support.extend.JedisPileLineOperator;
-import jetcache.samples.dao.ProductMapper;
 import jetcache.samples.dto.request.ProductRequest;
 import jetcache.samples.dto.response.ProductResponse;
 import jetcache.samples.dto.response.SkuResponse;
-import jetcache.samples.dto.response.SkuStockResponse;
-import jetcache.samples.service.*;
+import jetcache.samples.service.ProductService;
+import jetcache.samples.service.SkuService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,66 +22,18 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
-public class ProductServiceImpl implements ProductService {
-
-    private static Logger logger = LoggerFactory.getLogger(ProductServiceImpl.class);
+public class ProductServiceImpl2 implements ProductService {
+    private static Logger logger = LoggerFactory.getLogger(ProductServiceImpl2.class);
 
     @Autowired
     private SkuService skuService;
 
-    @Autowired
-    private ProductImageService productImageService;
-
-    @Autowired
-    private SkuPriceService skuPriceService;
-
-    @Autowired
-    private SkuStockService skuStockService;
 
     @Autowired
     private RedisTemplate<String,String> redisTemplate;
-
-    @Autowired
-    private ProductMapper productMapper;
-
-    private String imageHost="http://image.xxx.com";
-
-
-
-    /**
-     * 获取商品信息
-     * @param productCode
-     * @return
-     */
-    @Override
-    public ProductResponse getByProductCode(String productCode) {
-        ProductResponse productResponse = productMapper.getProductByCode(productCode);
-
-        List<String> productImages = productImageService.listByProductCode(productCode);
-        //拼接图片host
-        List<String> imagesWithHost = new ArrayList<>(productImages.size());
-        for(String imageUrl:productImages){
-            imagesWithHost.add(imageHost+imageUrl);
-        }
-        productResponse.setImages(imagesWithHost);
-
-        List<SkuResponse> skuResponses = skuService.listByProductCode(productCode);
-        List<SkuStockResponse> skuStockResponseList = skuStockService.listByProductCode(productCode);
-        //据skuCode 匹配对应的stock
-        Map<String, SkuStockResponse> skuStockMap = skuStockResponseList.stream().collect(Collectors.toMap(SkuStockResponse::getSkuCode, Function.identity()));
-        for(SkuResponse sku:skuResponses){
-            SkuStockResponse skuStockResponse = skuStockMap.get(sku.getSkuCode());
-            sku.setSkuStockResponse(skuStockResponse);
-        }
-        productResponse.setSkuResponses(skuResponses);
-
-        return productResponse;
-    }
-
 
     @Override
     public List<ProductResponse> listProduct(ProductRequest request) {
@@ -92,6 +43,34 @@ public class ProductServiceImpl implements ProductService {
             productResponses.add(getByProductCode(productCode));
         }
         return productResponses;
+    }
+
+    /**
+     * 采用原生api缓存
+     * @param productCode
+     * @return
+     */
+    @Override
+    public ProductResponse getByProductCode(String productCode) {
+        String pJson=null;
+        try {
+             pJson = redisTemplate.opsForValue().get("product:"+productCode);
+        }catch (Exception e){
+            logger.error("读缓存失败:",e);
+        }
+        if(pJson != null){
+            ProductResponse productResponse= JSON.parseObject(pJson,ProductResponse.class);
+            return productResponse;
+        }
+        ProductResponse productResponse = getProductFromDb(productCode);
+        List<SkuResponse> skuResponses = skuService.listByProductCode(productCode);
+        productResponse.setSkuResponses(skuResponses);
+        try {
+            redisTemplate.opsForValue().set("product:"+productCode,JSON.toJSONString(productResponse,100));
+        }catch (Exception e){
+            logger.error("写缓存失败:",e);
+        }
+        return productResponse;
     }
 
     /**
