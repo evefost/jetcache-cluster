@@ -8,6 +8,16 @@ public class SkuResponse {
 
     private SkuStockResponse skuStockResponse;
 
+    private SkuPriceResponse skuPriceResponse;
+
+    public SkuPriceResponse getSkuPriceResponse() {
+        return skuPriceResponse;
+    }
+
+    public void setSkuPriceResponse(SkuPriceResponse skuPriceResponse) {
+        this.skuPriceResponse = skuPriceResponse;
+    }
+
     public SkuStockResponse getSkuStockResponse() {
         return skuStockResponse;
     }
