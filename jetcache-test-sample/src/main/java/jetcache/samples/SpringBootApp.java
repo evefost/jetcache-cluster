@@ -14,7 +14,7 @@ import org.springframework.context.ConfigurableApplicationContext;
 /**
  * @author <a href="mailto:areyouok@gmail.com">huangli</a>
  */
-@SpringBootApplication(scanBasePackages = {"jetcache.samples","com.jetcache"})
+@SpringBootApplication(scanBasePackages = {"jetcache.samples","com.jetcache","test.jectcache"})
 
 @EnableExtendCache(basePackages = "jetcache.samples")
 @EnableCreateCacheAnnotation

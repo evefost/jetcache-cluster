@@ -7,10 +7,20 @@ public class ProductResponse implements Serializable {
 
     private String productCode;
 
+    private String image;
+
 
     private List<SkuResponse> skuResponses;
 
     private List<String> images;
+
+    public String getImage() {
+        return image;
+    }
+
+    public void setImage(String image) {
+        this.image = image;
+    }
 
     public List<String> getImages() {
         return images;
