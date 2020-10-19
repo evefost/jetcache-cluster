@@ -9,7 +9,7 @@ import com.jetcahe.support.extend.JedisPileLineOperator;
 import jetcache.samples.AsyContextCallable;
 import jetcache.samples.MultiTaskCallable;
 import jetcache.samples.annotation.AsynTask;
-import jetcache.samples.dao.ProductMapper;
+import jetcache.samples.dao.*;
 import jetcache.samples.dto.request.ProductRequest;
 import jetcache.samples.dto.response.ProductResponse;
 import jetcache.samples.dto.response.SkuPriceResponse;
@@ -51,33 +51,31 @@ public class ProductServiceImpl implements ProductService {
     private SkuStockService skuStockService;
 
 
-    @Autowired
-    private RedisTemplate<String, String> redisTemplate;
-
-//    @Autowired
-    private ProductMapper productMapper;
-
     private String imageHost = "http://image.xxx.com";
 
     private Executor executor = Executors.newFixedThreadPool(100);
 
-    /**
-     * 根据商品编码获取商品详细信息
-     * 1.获取商品主要信息
-     * 2.获取商品图片
-     * 3.获取商品sku信息
-     * 4.获取sku 库存
-     * 5.获取sku价格
-     *
-     * @param productCode
-     * @return
-     */
+    @Autowired
+    private RedisTemplate<String, String> redisTemplate;
+
+    @Autowired
+    private ProductMapper productMapper;
+    @Autowired
+    private ProductImageMapper productImageMapper;
+    @Autowired
+    private SkuMapper skuMapper;
+    @Autowired
+    private SkuStockMapper skuStockMapper;
+    @Autowired
+    private SkuPriceMapper skuPriceMapper;
+
+    //根据商品编码获取商品详细信息
     @Override
     public ProductResponse getByProductCode(String productCode) {
         //1.获取商品主要信息
         ProductResponse productResponse = productMapper.getProductByCode(productCode);
         //2.获取商品的图片
-        List<String> productImages = productImageService.listByProductCode(productCode);
+        List<String> productImages = productImageMapper.listByProductCode(productCode);
         //3.拼接图片host
         List<String> imagesWithHost = new ArrayList<>(productImages.size());
         for (String imageUrl : productImages) {
@@ -86,9 +84,9 @@ public class ProductServiceImpl implements ProductService {
         productResponse.setImages(imagesWithHost);
 
         //4获取商品sku信息
-        List<SkuResponse> skuResponses = skuService.listByProductCode(productCode);
+        List<SkuResponse> skuResponses = skuMapper.listByProductCode(productCode);
         //5获取商品sku对应的库存
-        List<SkuStockResponse> skuStockResponseList = skuStockService.listByProductCode(productCode);
+        List<SkuStockResponse> skuStockResponseList = skuStockMapper.listByProductCode(productCode);
         //6 据skuCode 匹配对应的stock
         Map<String, SkuStockResponse> skuStockMap = skuStockResponseList.stream().collect(Collectors.toMap(SkuStockResponse::getSkuCode, Function.identity()));
         for (SkuResponse sku : skuResponses) {
@@ -97,7 +95,7 @@ public class ProductServiceImpl implements ProductService {
         }
 
         //7获取商品sku对应的价格
-        List<SkuPriceResponse> skuPriceResponses = skuPriceService.listByProductCode(productCode);
+        List<SkuPriceResponse> skuPriceResponses = skuPriceMapper.listByProductCode(productCode);
         //8据skuCode 匹配对应的price
         Map<String, SkuPriceResponse> skuPriceMap = skuPriceResponses.stream().collect(Collectors.toMap(SkuPriceResponse::getSkuCode, Function.identity()));
         for (SkuResponse sku : skuResponses) {
