@@ -8,6 +8,7 @@ import com.jetcahe.support.annotation.ListCached;
 import com.jetcahe.support.extend.JedisPileLineOperator;
 import jetcache.samples.AsyContextCallable;
 import jetcache.samples.MultiTaskCallable;
+import jetcache.samples.annotation.AsynTask;
 import jetcache.samples.dao.ProductMapper;
 import jetcache.samples.dto.request.ProductRequest;
 import jetcache.samples.dto.response.ProductResponse;
@@ -40,7 +41,7 @@ public class ProductServiceImpl implements ProductService {
     @Autowired
     private SkuService skuService;
 
-    @Resource(name = "imageCacheProxyService")
+    @Resource(name = "imageService")
     private ProductImageService productImageService;
 
     @Autowired
@@ -53,7 +54,7 @@ public class ProductServiceImpl implements ProductService {
     @Autowired
     private RedisTemplate<String, String> redisTemplate;
 
-    @Autowired
+//    @Autowired
     private ProductMapper productMapper;
 
     private String imageHost = "http://image.xxx.com";
@@ -140,7 +141,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
 
-    @Async
+
     public ProductResponse getByProductCode6(String productCode) throws CloneNotSupportedException, InterruptedException {
         Map<String, Object> withMultiTypeTask = AsyContextCallable.submitWithMultiTypeTask(executor,
                 new MultiTaskCallable("product") {
@@ -165,6 +166,21 @@ public class ProductServiceImpl implements ProductService {
         List<String> productImages = (List<String>) withMultiTypeTask.get("image");
         List<SkuResponse> skuResponses = (List<SkuResponse>) withMultiTypeTask.get("sku");
         productResponse.setImages(productImages);
+        productResponse.setSkuResponses(skuResponses);
+        return productResponse;
+    }
+
+
+    @AsynTask(name = "getProductByCode",subTasks = 2)
+    @Override
+    public ProductResponse getByProductCode7(String productCode) {
+        //1.获取商品主要信息
+        ProductResponse productResponse = getProductFromDb(productCode);
+        //2.获取商品的图片
+        List<String> productImages = productImageService.listByProductCode(productCode);
+        productResponse.setImages(productImages);
+        //4获取商品sku信息
+        List<SkuResponse> skuResponses = skuService.listByProductCode(productCode);
         productResponse.setSkuResponses(skuResponses);
         return productResponse;
     }

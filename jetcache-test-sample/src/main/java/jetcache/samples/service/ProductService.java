@@ -13,6 +13,8 @@ public interface ProductService {
 
     ProductResponse getByProductCode3(String productCode);
 
+    ProductResponse getByProductCode7(String productCode);
+
     List<ProductResponse> listProduct(ProductRequest request);
 
     List<ProductResponse> listProduct2(ProductRequest request);

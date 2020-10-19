@@ -69,6 +69,13 @@ public class ProductServiceImplTest extends BaseServiceTest {
         System.out.println("sss");
     }
 
+    @Test
+    public void testListProductByCode7() throws Exception {
+
+        ProductResponse byProductCode2 = productService.getByProductCode7("1000");
+        System.out.println("sss");
+    }
+
     /**
      * Method: listProduct(ProductRequest request)
      */

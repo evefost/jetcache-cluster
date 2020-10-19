@@ -1,5 +1,6 @@
 package jetcache.samples.service.impl;
 
+import jetcache.samples.annotation.AsynTask;
 import jetcache.samples.dto.response.SkuPriceResponse;
 import jetcache.samples.dto.response.SkuResponse;
 import jetcache.samples.dto.response.SkuStockResponse;
@@ -31,6 +32,7 @@ public class SkuServiceImpl implements SkuService {
     @Autowired
     private SkuStockService skuStockService;
 
+    @AsynTask(parentName = "getProductByCode",name = "listSku",subTasks = 0)
     @Override
     public List<SkuResponse> listByProductCode(String productCode) {
         List<SkuResponse> skuResponses = mockProductSku(productCode);
@@ -42,7 +44,7 @@ public class SkuServiceImpl implements SkuService {
         List<SkuPriceResponse> skuPriceResponses = skuPriceService.listByProductCode(productCode);
         //8据skuCode 匹配对应的price
         mappingAndFillSkuPrice(skuResponses,skuPriceResponses);
-        return mockProductSku(productCode);
+        return skuResponses;
     }
 
     private void mappingAndFillSkuStocks(List<SkuResponse> skuResponses, List<SkuStockResponse> skuStockResponseList) {
