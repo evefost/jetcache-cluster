@@ -8,5 +8,5 @@ public interface ProductImageService {
 
     List<String> listByProductCode(String productCode);
 
-
+    List<String> listByProductCode2(String productCode);
 }

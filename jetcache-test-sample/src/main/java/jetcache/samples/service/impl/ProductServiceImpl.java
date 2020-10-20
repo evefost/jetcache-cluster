@@ -58,15 +58,15 @@ public class ProductServiceImpl implements ProductService {
     @Autowired
     private RedisTemplate<String, String> redisTemplate;
 
-    @Autowired
+//    @Autowired
     private ProductMapper productMapper;
-    @Autowired
+//    @Autowired
     private ProductImageMapper productImageMapper;
-    @Autowired
+//    @Autowired
     private SkuMapper skuMapper;
-    @Autowired
+//    @Autowired
     private SkuStockMapper skuStockMapper;
-    @Autowired
+//    @Autowired
     private SkuPriceMapper skuPriceMapper;
 
     //根据商品编码获取商品详细信息

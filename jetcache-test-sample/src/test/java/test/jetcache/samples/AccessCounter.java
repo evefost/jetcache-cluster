@@ -4,5 +4,10 @@ public class AccessCounter {
     /**
      * 访问量计数据器
      */
-    public  int total;
+    private   int total;
+
+    public int increase(){
+        total++;
+        return total;
+    }
 }

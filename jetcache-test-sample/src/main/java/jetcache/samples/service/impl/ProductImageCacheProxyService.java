@@ -42,4 +42,9 @@ public class ProductImageCacheProxyService implements ProductImageService {
         }
         return imageList;
     }
+
+    @Override
+    public List<String> listByProductCode2(String productCode) {
+        return null;
+    }
 }
