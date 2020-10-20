@@ -86,7 +86,7 @@ public class ProxyReferenceTest {
                     TaskInfo skuMethodInfo = methods.get().get("sku");
                     Method skuMethod = skuMethodInfo.getMethod();
                     Object skuSource = skuMethod.invoke(reference, skuMethodInfo.getArgs());
-                    Object sku = methods.get().get("sku");
+                    Object sku = skuMethodInfo.getResult();
                     BeanUtils.copyProperties(skuSource, sku);
 
                     TaskInfo listSkuInfo = methods.get().get("listSku");

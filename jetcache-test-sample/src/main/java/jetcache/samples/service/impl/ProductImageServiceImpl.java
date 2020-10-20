@@ -3,6 +3,7 @@ package jetcache.samples.service.impl;
 import com.alicp.jetcache.anno.CacheType;
 import com.alicp.jetcache.anno.Cached;
 import jetcache.samples.annotation.AsynTask;
+import jetcache.samples.service.ImageRemoteService;
 import jetcache.samples.service.ProductImageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -16,8 +17,22 @@ public class ProductImageServiceImpl implements ProductImageService {
 
     private String imageHost="http://image.xxx.com";
 
+    @Autowired(required = false)
+    private ImageRemoteService imageRemoteService;
 
-//    @Cached(name = "product-image",key = "#productCode",expire = 100,cacheType = CacheType.REMOTE,localExpire = 100)
+    public void setImageRemoteService(ImageRemoteService imageRemoteService) {
+        this.imageRemoteService = imageRemoteService;
+    }
+
+    @Override
+    public List<String> listByProductCode2(String productCode) {
+        //从远程服务
+        List<String> imageUrls = imageRemoteService.listByProductCode(productCode);
+        List<String> imageLIst = buildImageUrlWithHost(imageUrls);
+        return imageLIst;
+    }
+
+    //    @Cached(name = "product-image",key = "#productCode",expire = 100,cacheType = CacheType.REMOTE,localExpire = 100)
     @AsynTask(parentName = "getProductByCode",name = "listImage",subTasks = 0)
     @Override
     public List<String> listByProductCode(String productCode) {
@@ -25,6 +40,7 @@ public class ProductImageServiceImpl implements ProductImageService {
         List<String> imageLIst = buildImageUrlWithHost(imageUrls);
         return imageLIst;
     }
+
 
 
 
