@@ -8,21 +8,26 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class MultiThreadTest {
-
-    Executor executor = Executors.newFixedThreadPool(500);
+    int threads = 100;
+    Executor executor = Executors.newFixedThreadPool(threads);
     int counter = 0;
 
     //模拟并发访问统计
     @Test()
     public void testCount2() throws InterruptedException {
         //执行的任务次数
-        int taskCount = 1000000;
+        int taskCount = 100000;
         MultiThreadTestUtils.TestResult executeResult = MultiThreadTestUtils.execute(executor, taskCount, () -> {
             //执行目标代码,非原子操作加锁
             synchronized (MultiThreadTest.class) {
                 counter = counter + 1;
             }
-        });
+            try {
+                Thread.sleep(10 );
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        },threads);
         //校验统计结果
         assert taskCount == counter;
         System.out.println(executeResult);
@@ -34,19 +39,18 @@ public class MultiThreadTest {
         MultiThreadTestUtils.TestResult execute = MultiThreadTestUtils.execute(executor, 10000l, () -> {
                     long startTime = System.currentTimeMillis();
                     try {
-                        Thread.sleep(10 + random.nextInt(10));
+                        Thread.sleep(10 );
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
                     long e = System.currentTimeMillis();
                     long totalTime = (e-startTime);
-                    System.out.println("time:"+totalTime);
 //                    if (random.nextBoolean()) {
 //                        //模拟出来
 //                        throw new RuntimeException("出错了");
 //                    }
                 }
-        );
+        ,threads);
         System.out.println(execute);
     }
 }
