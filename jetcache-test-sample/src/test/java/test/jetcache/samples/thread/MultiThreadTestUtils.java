@@ -11,9 +11,9 @@ public class MultiThreadTestUtils {
 
     /**
      * 按任务数来测试并发
-     * @param poolSize
-     * @param queueSize
-     * @param taskCount 任务数
+     * @param poolSize 线程池大小
+     * @param queueSize 任务队列大小
+     * @param taskCount 当前要执行的任务总数
      * @param target
      * @return
      * @throws InterruptedException

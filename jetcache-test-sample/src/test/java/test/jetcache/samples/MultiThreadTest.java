@@ -5,18 +5,15 @@ import test.jetcache.samples.thread.MultiThreadTestUtils;
 import test.jetcache.samples.thread.TestResult;
 
 import java.util.Random;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 public class MultiThreadTest {
-    static int threads = 100;
-    static ExecutorService executor = Executors.newFixedThreadPool(threads);
+
     static int counter = 0;
 
+    Random random = new Random();
     //模拟并发访问统计
-//    @Test()
-    public static void main(String[] args) throws InterruptedException {
-
+    @Test()
+    public void count() throws InterruptedException {
         //执行的任务次数
         int taskCount = 1000002;
         TestResult executeResult = MultiThreadTestUtils.execute(200, 1000000, taskCount, () -> {
@@ -32,17 +29,14 @@ public class MultiThreadTest {
         });
         //校验统计结果
         assert taskCount == counter;
-        System.out.println(executeResult);
+        assert executeResult.getThrowableList().size()==0;
+
     }
 
-    //
-//    @Test()
-//    public void testCount4() throws InterruptedException {
-    public static void main2(String[] args) throws InterruptedException {
+    @Test()
+    public void count2() throws InterruptedException {
 
-
-        Random random = new Random();
-        TestResult execute = MultiThreadTestUtils.execute(200, 500000, 10000l, () -> {
+        TestResult executeResult = MultiThreadTestUtils.execute(200, 500000, 20000l, () -> {
                     synchronized (MultiThreadTest.class) {
                         counter = counter + 1;
                     }
@@ -51,8 +45,11 @@ public class MultiThreadTest {
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
+                    if(random.nextInt(10)%3==0){
+                        throw new RuntimeException("模拟任务失败");
+                    }
                 }
         );
-        System.out.println(execute);
+        assert executeResult.getThrowableList().size()==0;
     }
 }
