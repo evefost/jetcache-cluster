@@ -20,13 +20,16 @@ public class MultiThreadTestUtils {
      */
     public static TestResult execute(int poolSize, int queueSize, int taskCount, Runnable target) throws InterruptedException {
         TestResult testResult = TestResult.build();
+        testResult.setWorkThreads(poolSize);
         CountDownLatch executeLatch = new CountDownLatch(taskCount);
         CountDownLatch finishLatch = new CountDownLatch(taskCount);
         ExecutorService executor = newExecutorService(poolSize, queueSize,testResult,finishLatch);
+
         AtomicInteger taskCounter = new AtomicInteger(0);
         AtomicLong actualTotalTime = new AtomicLong(0);
         testResult.setTaskCounter(taskCounter);
         testResult.setActualTotalTime(actualTotalTime);
+
         SystemMonitor.start(testResult);
         long s = System.currentTimeMillis();
         for (int i = 0; i < taskCount; i++) {
@@ -54,18 +57,33 @@ public class MultiThreadTestUtils {
     }
 
 
-
     /**
      * 指定执行时长
      * @param poolSize
      * @param queueSize
-     * @param executeTime 指定执行时长
+     * @param executeTime 指定测试时长 单位ms
      * @param target
      * @return
      * @throws InterruptedException
      */
     public static TestResult execute(int poolSize, int queueSize, long executeTime, Runnable target) throws InterruptedException {
+         return execute(poolSize,queueSize,executeTime,target,0);
+    }
+
+    /**
+     * 指定执行时长
+     * @param poolSize
+     * @param queueSize
+     * @param executeTime 指定测试时长 单位ms
+     * @param target
+     * @param submitTps 任务提交速率，每秒提效的任务数
+     * @return
+     * @throws InterruptedException
+     */
+    public static TestResult execute(int poolSize, int queueSize, long executeTime, Runnable target,int submitTps) throws InterruptedException {
         TestResult testResult = TestResult.build();
+        testResult.setWorkThreads(poolSize);
+        testResult.setSubmitTps(submitTps);
         ExecutorService executor = newExecutorService(poolSize, queueSize,testResult,null);
         AtomicInteger taskCounter = new AtomicInteger(0);
         AtomicLong actualTotalTime = new AtomicLong(0);
@@ -81,27 +99,43 @@ public class MultiThreadTestUtils {
                 run[0] = false;
             }
         }, executeTime);
-        long s = System.currentTimeMillis();
+
+        int flow = submitTps/50;
+        Semaphore semaphore = new Semaphore(flow);
+        boolean flowControl = submitTps>0;
         while (run[0]) {
-            executor.execute(() -> {
-                long st = System.currentTimeMillis();
-                try {
-                    target.run();
-                } catch (Throwable throwable) {
-                    testResult.addException(throwable);
-                } finally {
-                    taskCounter.incrementAndGet();
-                    long et = System.currentTimeMillis();
-                    long usedTime = et - st;
-                    actualTotalTime.getAndAdd(usedTime);
+            if(flowControl){
+                //简单的流量控制(20ms放一次提交)
+                Thread.sleep(20);
+                semaphore.acquire(flow);
+                for(int t=0;t<flow;t++){
+                    submitTask(target, testResult, executor, taskCounter, actualTotalTime);
                 }
-            });
+                semaphore.release(flow);
+            }else {
+                submitTask(target, testResult, executor, taskCounter, actualTotalTime);
+            }
         }
         SystemMonitor.stop();
         executor.shutdown();
         return testResult;
     }
 
+    private static void submitTask(Runnable target, TestResult testResult, ExecutorService executor, AtomicInteger taskCounter, AtomicLong actualTotalTime) {
+        executor.execute(() -> {
+            long st = System.currentTimeMillis();
+            try {
+                target.run();
+            } catch (Throwable throwable) {
+                testResult.addException(throwable);
+            } finally {
+                taskCounter.incrementAndGet();
+                long et = System.currentTimeMillis();
+                long usedTime = et - st;
+                actualTotalTime.getAndAdd(usedTime);
+            }
+        });
+    }
 
 
     private static ExecutorService newExecutorService(int poolSize, int queueSize,TestResult result,CountDownLatch finishLatch) {

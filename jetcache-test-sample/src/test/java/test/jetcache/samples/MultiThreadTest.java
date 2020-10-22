@@ -16,7 +16,7 @@ public class MultiThreadTest {
     public void count() throws InterruptedException {
         //执行的任务次数
         int taskCount = 1000002;
-        TestResult executeResult = MultiThreadTestUtils.execute(200, 1000000, taskCount, () -> {
+        TestResult executeResult = MultiThreadTestUtils.execute(200, 1000000, 1000002, () -> {
             //执行目标代码,非原子操作加锁
             synchronized (MultiThreadTest.class) {
                 counter = counter + 1;
@@ -35,8 +35,7 @@ public class MultiThreadTest {
 
     @Test()
     public void count2() throws InterruptedException {
-
-        TestResult executeResult = MultiThreadTestUtils.execute(200, 500000, 20000l, () -> {
+        TestResult executeResult = MultiThreadTestUtils.execute(11, 10000, 200000l, () -> {
                     synchronized (MultiThreadTest.class) {
                         counter = counter + 1;
                     }
@@ -45,11 +44,11 @@ public class MultiThreadTest {
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
-                    if(random.nextInt(10)%3==0){
-                        throw new RuntimeException("模拟任务失败");
-                    }
+//                    if(random.nextInt(10)%3==0){
+//                        throw new RuntimeException("模拟任务失败");
+//                    }
                 }
-        );
+        ,1000);
         assert executeResult.getThrowableList().size()==0;
     }
 }

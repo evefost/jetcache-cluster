@@ -43,6 +43,26 @@ public class TestResult {
 
     private AtomicInteger rejectCount;
 
+    private int submitTps;
+
+    private int workThreads;
+
+    public int getWorkThreads() {
+        return workThreads;
+    }
+
+    public void setWorkThreads(int workThreads) {
+        this.workThreads = workThreads;
+    }
+
+    public int getSubmitTps() {
+        return submitTps;
+    }
+
+    public void setSubmitTps(int submitTps) {
+        this.submitTps = submitTps;
+    }
+
     private BlockingQueue<Runnable> taskQueue;
 
     public BlockingQueue<Runnable> getTaskQueue() {
