@@ -35,7 +35,7 @@ public class MultiThreadTest {
 
     @Test()
     public void count2() throws InterruptedException {
-        TestResult executeResult = MultiThreadTestUtils.execute(11, 10000, 200000l, () -> {
+        TestResult executeResult = MultiThreadTestUtils.execute(330, 10000, 2000000l, () -> {
                     synchronized (MultiThreadTest.class) {
                         counter = counter + 1;
                     }

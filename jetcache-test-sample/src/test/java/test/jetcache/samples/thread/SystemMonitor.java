@@ -90,7 +90,7 @@ public class SystemMonitor {
         if(avgTaskTime>0){
             mayTps=(1000/avgTaskTime)*testResult.getWorkThreads();
         }
-        System.out.println("等待任务["+testResult.getTaskQueue().size()+"]当前提交tps["+testResult.getSubmitTps()+"]当前处理tps["+currentTps+"]处理能力tps约["+mayTps+"]");
+        System.out.println("等待任务["+testResult.getTaskQueue().size()+"]当前提交tps["+testResult.getSubmitTps()+"]当前处理tps["+currentTps+"]估算处理能力tps约["+mayTps+"]");
         StringBuilder sb=new StringBuilder();
         for(int i=0;i<des.length();i++){
             sb.append('-');
