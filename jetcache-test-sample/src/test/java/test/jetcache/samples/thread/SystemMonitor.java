@@ -79,18 +79,22 @@ public class SystemMonitor {
         String avgTaskTimeStr =  String.format("| %d ms", avgTaskTime);
         String executeTime =  String.format("    | %d ms", testResult.getTotalExecuteTime());
         String des = cpu+workThread+"   |"+testResult.getTaskCounter().get()+rejectCount+failTask+avgTaskTimeStr+executeTime;
-        int currentTps = 0;
+        float currentTps = 0;
         if(testResult.getTotalExecuteTime()/1000<1){
             currentTps=0;
         }else {
-            currentTps = (int) (taskCount*1000/testResult.getTotalExecuteTime());
+            currentTps = taskCount*1000f/testResult.getTotalExecuteTime();
         }
+        String currentTpsStr = String.format("%.1f", currentTps);
         System.out.println(des);
-        long mayTps=0;
+        float mayTps=0;
         if(avgTaskTime>0){
-            mayTps=(1000/avgTaskTime)*testResult.getWorkThreads();
+            mayTps=((float)1000/avgTaskTime)*testResult.getWorkThreads();
         }
-        System.out.println("等待任务["+testResult.getTaskQueue().size()+"]当前提交tps["+testResult.getSubmitTps()+"]当前处理tps["+currentTps+"]估算处理能力tps约["+mayTps+"]");
+        String mayTpsStr = String.format("%.1f", mayTps);
+        float submitTps = (taskCount+testResult.getTaskQueue().size())*1000/testResult.getTotalExecuteTime();
+        String submitTpsStr = String.format("%.1f", submitTps);
+        System.out.println("等待任务["+testResult.getTaskQueue().size()+"]当前提交tps["+submitTpsStr+"]当前处理tps["+currentTpsStr+"]估算处理能力tps约["+mayTpsStr+"]");
         StringBuilder sb=new StringBuilder();
         for(int i=0;i<des.length();i++){
             sb.append('-');

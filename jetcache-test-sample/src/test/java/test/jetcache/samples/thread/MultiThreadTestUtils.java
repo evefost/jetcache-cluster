@@ -67,7 +67,7 @@ public class MultiThreadTestUtils {
      * @throws InterruptedException
      */
     public static TestResult execute(int poolSize, int queueSize, long executeTime, Runnable target) throws InterruptedException {
-         return execute(poolSize,queueSize,executeTime,target,0);
+         return execute(poolSize,queueSize,executeTime,0,target);
     }
 
     /**
@@ -80,7 +80,7 @@ public class MultiThreadTestUtils {
      * @return
      * @throws InterruptedException
      */
-    public static TestResult execute(int poolSize, int queueSize, long executeTime, Runnable target,int submitTps) throws InterruptedException {
+    public static TestResult execute(int poolSize, int queueSize, long executeTime ,int submitTps,Runnable target) throws InterruptedException {
         TestResult testResult = TestResult.build();
         testResult.setWorkThreads(poolSize);
         testResult.setSubmitTps(submitTps);

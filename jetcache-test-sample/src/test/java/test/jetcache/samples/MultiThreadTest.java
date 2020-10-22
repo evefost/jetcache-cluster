@@ -11,6 +11,7 @@ public class MultiThreadTest {
     static int counter = 0;
 
     Random random = new Random();
+
     //模拟并发访问统计
     @Test()
     public void count() throws InterruptedException {
@@ -29,26 +30,44 @@ public class MultiThreadTest {
         });
         //校验统计结果
         assert taskCount == counter;
-        assert executeResult.getThrowableList().size()==0;
+        assert executeResult.getThrowableList().size() == 0;
 
     }
 
     @Test()
     public void count2() throws InterruptedException {
-        TestResult executeResult = MultiThreadTestUtils.execute(330, 10000, 2000000l, () -> {
+        //tps=threads*(1000/avgRequest)
+        TestResult executeResult = MultiThreadTestUtils.execute(110, 10000, 2000000l, 100, () -> {
                     synchronized (MultiThreadTest.class) {
                         counter = counter + 1;
                     }
                     try {
-                        Thread.sleep(10);
+                        Thread.sleep(100);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
-//                    if(random.nextInt(10)%3==0){
-//                        throw new RuntimeException("模拟任务失败");
-//                    }
                 }
-        ,1000);
-        assert executeResult.getThrowableList().size()==0;
+        );
+        assert executeResult.getThrowableList().size() == 0;
     }
+
+
+    @Test()
+    public void count3() throws InterruptedException {
+        //tps=threads*(1000/avgRequest)
+        TestResult executeResult = MultiThreadTestUtils.execute(8, 10000, 2000000l, 1000, () -> {
+                    for (int i = 0; i < 100000; i++) {
+                        doSomething();
+                    }
+                }
+
+        );
+        assert executeResult.getThrowableList().size() == 0;
+    }
+    private static void doSomething(){
+        StringBuilder sb = new StringBuilder();
+        sb.append("aaaa").append("bbbbb");
+        sb.toString();
+    }
+
 }
