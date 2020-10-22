@@ -1,8 +1,8 @@
-package test.jetcache.samples;
+package test.lingzhi.dubhe.test;
 
+import com.lingzhi.dubhe.test.MultiThreadTestUtils;
+import com.lingzhi.dubhe.test.TestResult;
 import org.junit.Test;
-import test.jetcache.samples.thread.MultiThreadTestUtils;
-import test.jetcache.samples.thread.TestResult;
 
 import java.util.Random;
 
@@ -37,7 +37,7 @@ public class MultiThreadTest {
     @Test()
     public void count2() throws InterruptedException {
         //tps=threads*(1000/avgRequest)
-        TestResult executeResult = MultiThreadTestUtils.execute(110, 10000, 2000000l, 100, () -> {
+        TestResult executeResult = MultiThreadTestUtils.execute(110, 10000, 40000l, 1200, () -> {
                     synchronized (MultiThreadTest.class) {
                         counter = counter + 1;
                     }
@@ -64,7 +64,8 @@ public class MultiThreadTest {
         );
         assert executeResult.getThrowableList().size() == 0;
     }
-    private static void doSomething(){
+
+    private static void doSomething() {
         StringBuilder sb = new StringBuilder();
         sb.append("aaaa").append("bbbbb");
         sb.toString();

@@ -1,4 +1,4 @@
-package test.jetcache.samples.thread;
+package com.lingzhi.dubhe.test;
 
 import java.util.Timer;
 import java.util.TimerTask;
@@ -6,8 +6,11 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
+/**
+ *
+ * @author xieyang
+ */
 public class MultiThreadTestUtils {
-
 
     /**
      * 按任务数来测试并发

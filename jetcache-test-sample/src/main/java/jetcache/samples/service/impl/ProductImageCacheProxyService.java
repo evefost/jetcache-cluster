@@ -10,7 +10,7 @@ import org.springframework.util.StringUtils;
 import javax.annotation.Resource;
 import java.util.List;
 
-@Service("imageCacheProxyService")
+//@Service("imageCacheProxyService")
 public class ProductImageCacheProxyService implements ProductImageService {
 
 

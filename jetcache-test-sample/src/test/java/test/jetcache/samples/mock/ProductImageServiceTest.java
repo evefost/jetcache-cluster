@@ -5,9 +5,14 @@ import jetcache.samples.service.ProductImageService;
 import jetcache.samples.service.impl.ProductImageServiceImpl;
 import org.junit.Before;
 import org.junit.Test;
+import org.springframework.aop.framework.AopProxy;
+import org.springframework.aop.framework.AopProxyUtils;
+import org.springframework.aop.support.AopUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import test.jetcache.samples.BaseServiceTest;
+import test.jetcache.samples.thread.InjectUtils;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,14 +22,14 @@ import static org.mockito.Mockito.*;
 public class ProductImageServiceTest extends BaseServiceTest {
     //通过spring 注入
     @Autowired
-    private ProductImageServiceImpl productImageService;
+    private ProductImageService productImageService;
 
     @Before
-    public void init() {
+    public void init() throws IllegalAccessException {
         //productImageService = mock(ProductImageServiceImpl.class);
         //仿造一个ImageRemoteService 实例，并设置到ProductImageServiceImpl里
         ImageRemoteService remoteService = mock(ImageRemoteService.class);
-        productImageService.setImageRemoteService(remoteService);
+        InjectUtils.injectFields(productImageService,remoteService);
     }
     @Test
     public void testListImageByProductCode() {

@@ -1,4 +1,4 @@
-package test.jetcache.samples.thread;
+package com.lingzhi.dubhe.test;
 
 import java.util.Collections;
 import java.util.LinkedList;
@@ -7,6 +7,9 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
+/**
+ * @author xieyang
+ */
 public class TestResult {
 
     /**

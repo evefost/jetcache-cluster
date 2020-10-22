@@ -20,10 +20,6 @@ public class ProductImageServiceImpl implements ProductImageService {
     @Autowired(required = false)
     private ImageRemoteService imageRemoteService;
 
-    public void setImageRemoteService(ImageRemoteService imageRemoteService) {
-        this.imageRemoteService = imageRemoteService;
-    }
-
     @Override
     public List<String> listByProductCode2(String productCode) {
         //从远程服务
@@ -32,7 +28,7 @@ public class ProductImageServiceImpl implements ProductImageService {
         return imageLIst;
     }
 
-    //    @Cached(name = "product-image",key = "#productCode",expire = 100,cacheType = CacheType.REMOTE,localExpire = 100)
+    @Cached(name = "product-image",key = "#productCode",expire = 100,cacheType = CacheType.REMOTE,localExpire = 100)
     @AsynTask(parentName = "getProductByCode",name = "listImage",subTasks = 0)
     @Override
     public List<String> listByProductCode(String productCode) {

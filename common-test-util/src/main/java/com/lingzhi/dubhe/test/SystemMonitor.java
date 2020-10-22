@@ -1,9 +1,12 @@
-package test.jetcache.samples.thread;
+package com.lingzhi.dubhe.test;
 
 import java.lang.management.ManagementFactory;
 import java.lang.management.OperatingSystemMXBean;
 import java.lang.management.ThreadMXBean;
 
+/**
+ * @author xieyang
+ */
 public class SystemMonitor {
 
     private static SystemMonitor instance = new SystemMonitor();
@@ -60,15 +63,15 @@ public class SystemMonitor {
                     e.printStackTrace();
                 }
             }
-            System.out.println("停止运行...");
+
 
         });
         thread.start();
     }
 
     private static void print(){
-        String title = "|cpu使用|工作程数|已执行任务 |拒绝任务 | 失败任务 |任务平均耗时|累计运行时长";
-        System.out.println(title);
+        String title = "|cpu使用|工作线程|已执行任务 |拒绝任务 | 失败任务 |任务平均耗时|累计运行时长";
+
         String cpu = String.format("| %.2f", SystemMonitor.getInstance().getCpuUsed());
 
         int taskCount = testResult.getTaskCounter().get()==0?1:testResult.getTaskCounter().get();
@@ -86,7 +89,7 @@ public class SystemMonitor {
             currentTps = taskCount*1000f/testResult.getTotalExecuteTime();
         }
         String currentTpsStr = String.format("%.1f", currentTps);
-        System.out.println(des);
+
         float mayTps=0;
         if(avgTaskTime>0){
             mayTps=((float)1000/avgTaskTime)*testResult.getWorkThreads();
@@ -94,12 +97,19 @@ public class SystemMonitor {
         String mayTpsStr = String.format("%.1f", mayTps);
         float submitTps = (taskCount+testResult.getTaskQueue().size())*1000/testResult.getTotalExecuteTime();
         String submitTpsStr = String.format("%.1f", submitTps);
-        System.out.println("等待任务["+testResult.getTaskQueue().size()+"]当前提交tps["+submitTpsStr+"]当前处理tps["+currentTpsStr+"]估算处理能力tps约["+mayTpsStr+"]");
+        String subScript = "等待任务["+testResult.getTaskQueue().size()+"]当前提交tps["+submitTpsStr+"]当前处理tps["+currentTpsStr+"]估算处理能力tps约["+mayTpsStr+"]";
+
         StringBuilder sb=new StringBuilder();
-        for(int i=0;i<des.length();i++){
+        for(int i=0;i<des.length()+15;i++){
             sb.append('-');
         }
         System.out.println(sb.toString());
+        System.out.println(title);
+        System.out.println(des);
+        System.out.println(subScript);
+        if(!running){
+            System.out.println("执行结束...");
+        }
     }
 
     public static void stop(){
