@@ -24,16 +24,29 @@ public class ProductImageServiceTest extends BaseServiceTest {
     //通过spring 注入
     @Autowired
     private ProductImageService productImageService;
-
-
-
     @Before
     public void init() throws IllegalAccessException {
         //productImageService = mock(ProductImageServiceImpl.class);
         //仿造一个ImageRemoteService 实例，并设置到ProductImageServiceImpl里
         ImageRemoteService remoteService = mock(ImageRemoteService.class);
+        //不改变产生代码，注入mock实例
         InjectUtils.injectFields(productImageService, remoteService);
     }
+    @Test
+    public void testListImageByProductCode() {
+        //模拟接口返回值
+        when(productImageService.listByProductCode2("abc"))
+                .thenReturn(mockImageList());
+        List<String> imageList = productImageService.listByProductCode2("abc");
+        assert imageList.size() == 2;
+    }
+    private List<String> mockImageList() {
+        List<String> objects = new ArrayList<>();
+        objects.add("xxxxx.jpg");
+        objects.add("yyyyy.jpg");
+        return objects;
+    }
+
 
 
     @Test
@@ -54,26 +67,12 @@ public class ProductImageServiceTest extends BaseServiceTest {
             response.setUserName("lingzhi");
             ResponseEntity<WeworkResponse> responseEntity = new ResponseEntity<>(response,HttpStatus.OK);
             return responseEntity;
-        });
-        WeworkResponse body1 = productImageService.requestWework();
+        });WeworkResponse body1 = productImageService.requestWework();
         assert body1 != null;
     }
 
-    @Test
-    public void testListImageByProductCode() {
-        //模拟接口返回值
-        when(productImageService.listByProductCode2("abc"))
-                .thenReturn(mockImageList());
-        List<String> imageList = productImageService.listByProductCode2("abc");
-        assert imageList.size() == 2;
-    }
 
-    private List<String> mockImageList() {
-        List<String> objects = new ArrayList<>();
-        objects.add("xxxxx.jpg");
-        objects.add("yyyyy.jpg");
-        return objects;
-    }
+
 
     @Test
     public void testListImageByProductCode2() {
