@@ -4,6 +4,9 @@ import com.lingzhi.dubhe.test.MultiThreadTestUtils;
 import com.lingzhi.dubhe.test.TestResult;
 import org.junit.Test;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 public class MultiThreadTest {
@@ -37,12 +40,15 @@ public class MultiThreadTest {
     @Test()
     public void count2() throws InterruptedException {
         //tps=threads*(1000/avgRequest)
-        TestResult executeResult = MultiThreadTestUtils.execute(110, 10000, 40000l, 1200, () -> {
+        List<TestResult> testMemoryLeak = new ArrayList<>();
+        TestResult executeResult = MultiThreadTestUtils.execute(110, 10000, 2000000l, 50000, () -> {
                     synchronized (MultiThreadTest.class) {
                         counter = counter + 1;
+                        TestResult result = new TestResult();
+                        testMemoryLeak.add(result);
                     }
                     try {
-                        Thread.sleep(100);
+                        Thread.sleep(10);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }

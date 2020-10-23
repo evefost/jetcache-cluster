@@ -144,7 +144,13 @@ public class MultiThreadTestUtils {
     private static ExecutorService newExecutorService(int poolSize, int queueSize,TestResult result,CountDownLatch finishLatch) {
         LinkedBlockingQueue taskQueue = new LinkedBlockingQueue<>(queueSize);
         result.setTaskQueue(taskQueue);
-        ThreadPoolExecutor poolExecutor = new ThreadPoolExecutor(poolSize, poolSize, 2, TimeUnit.SECONDS, taskQueue,new CountRejectedExecutionHandler(result,finishLatch));
+        ThreadPoolExecutor poolExecutor = new ThreadPoolExecutor(poolSize, poolSize, 2, TimeUnit.SECONDS, taskQueue, new ThreadFactory() {
+            private AtomicInteger threadIndex = new AtomicInteger(0);
+            @Override
+            public Thread newThread(Runnable runnable) {
+                return new Thread(runnable,"TestThread-"+threadIndex.getAndIncrement());
+            }
+        },new CountRejectedExecutionHandler(result,finishLatch));
         return poolExecutor;
     }
 
