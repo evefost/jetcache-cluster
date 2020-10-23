@@ -1,18 +1,19 @@
 package test.jetcache.samples.mock;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.TypeReference;
+import com.lingzhi.dubhe.test.InjectUtils;
+import jetcache.samples.dto.WeworkResponse;
 import jetcache.samples.service.ImageRemoteService;
 import jetcache.samples.service.ProductImageService;
-import jetcache.samples.service.impl.ProductImageServiceImpl;
 import org.junit.Before;
 import org.junit.Test;
-import org.springframework.aop.framework.AopProxy;
-import org.springframework.aop.framework.AopProxyUtils;
-import org.springframework.aop.support.AopUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.*;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestTemplate;
 import test.jetcache.samples.BaseServiceTest;
-import test.jetcache.samples.thread.InjectUtils;
 
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,13 +25,40 @@ public class ProductImageServiceTest extends BaseServiceTest {
     @Autowired
     private ProductImageService productImageService;
 
+
+
     @Before
     public void init() throws IllegalAccessException {
         //productImageService = mock(ProductImageServiceImpl.class);
         //仿造一个ImageRemoteService 实例，并设置到ProductImageServiceImpl里
         ImageRemoteService remoteService = mock(ImageRemoteService.class);
-        InjectUtils.injectFields(productImageService,remoteService);
+        InjectUtils.injectFields(productImageService, remoteService);
     }
+
+
+    @Test
+    public void mockRequestWework() throws IllegalAccessException {
+        RestTemplate restTemplate = mock(RestTemplate.class);
+        InjectUtils.injectFields(productImageService, restTemplate);
+        //构造请求数参数
+        String url = "http://xxx.com/xxxx/sss";
+        MultiValueMap<String, String> headers = new HttpHeaders();
+        headers.set("content-type", "application/json");
+        HttpEntity requestEntity = new HttpEntity<>(null, headers);
+        //模拟响应信息
+        when(restTemplate.exchange(url, HttpMethod.POST, requestEntity, WeworkResponse.class)).then(invocationOnMock -> {
+            //模拟企业微信响应时长
+            Thread.sleep(200L);
+            WeworkResponse response = new WeworkResponse();
+            response.setUserId(123);
+            response.setUserName("lingzhi");
+            ResponseEntity<WeworkResponse> responseEntity = new ResponseEntity<>(response,HttpStatus.OK);
+            return responseEntity;
+        });
+        WeworkResponse body1 = productImageService.requestWework();
+        assert body1 != null;
+    }
+
     @Test
     public void testListImageByProductCode() {
         //模拟接口返回值
@@ -39,6 +67,7 @@ public class ProductImageServiceTest extends BaseServiceTest {
         List<String> imageList = productImageService.listByProductCode2("abc");
         assert imageList.size() == 2;
     }
+
     private List<String> mockImageList() {
         List<String> objects = new ArrayList<>();
         objects.add("xxxxx.jpg");
@@ -84,9 +113,8 @@ public class ProductImageServiceTest extends BaseServiceTest {
         verify(spy).listByProductCode2("123");
         when(spy.listByProductCode2("abc")).thenReturn(mockImageList());
         List<String> images = spy.listByProductCode2("abc");
-        assertEquals(2,images.size());
+        assertEquals(2, images.size());
     }
-
 
 
     private List<String> mockImageList2() {

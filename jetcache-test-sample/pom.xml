@@ -14,7 +14,7 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.xy.jetcache</groupId>
+            <groupId>com.lingzhi.dubhe</groupId>
             <artifactId>jetcahe-support-starter</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
@@ -33,10 +33,18 @@
             <scope>test</scope>
             <version>2.3.3.RELEASE</version>
         </dependency>
+
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-all</artifactId>
+            <version>1.10.19</version>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-web</artifactId>
+            <version>5.2.8.RELEASE</version>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>com.lingzhi.dubhe</groupId>
