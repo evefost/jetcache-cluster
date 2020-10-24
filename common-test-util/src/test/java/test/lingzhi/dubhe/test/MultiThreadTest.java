@@ -40,12 +40,9 @@ public class MultiThreadTest {
     @Test()
     public void count2() throws InterruptedException {
         //tps=threads*(1000/avgRequest)
-        List<TestResult> testMemoryLeak = new ArrayList<>();
-        TestResult executeResult = MultiThreadTestUtils.execute(110, 10000, 2000000l, 50000, () -> {
+        TestResult executeResult = MultiThreadTestUtils.execute(11, 1000, 2000000l, 1150, () -> {
                     synchronized (MultiThreadTest.class) {
                         counter = counter + 1;
-                        TestResult result = new TestResult();
-                        testMemoryLeak.add(result);
                     }
                     try {
                         Thread.sleep(10);

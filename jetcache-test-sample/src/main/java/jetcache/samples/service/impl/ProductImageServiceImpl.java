@@ -51,10 +51,15 @@ public class ProductImageServiceImpl implements ProductImageService {
 
 
 
-    @Cached(name = "product-image",key = "#productCode",expire = 100,cacheType = CacheType.REMOTE,localExpire = 100)
+//    @Cached(name = "product-image",key = "#productCode",expire = 100,cacheType = CacheType.REMOTE,localExpire = 100)
     @AsynTask(parentName = "getProductByCode",name = "listImage",subTasks = 0)
     @Override
     public List<String> listByProductCode(String productCode) {
+        try {
+            Thread.sleep(500);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         List<String> imageUrls = getImagesFromRemote(productCode);
         List<String> imageLIst = buildImageUrlWithHost(imageUrls);
         return imageLIst;

@@ -35,6 +35,11 @@ public class SkuServiceImpl implements SkuService {
     @AsynTask(parentName = "getProductByCode",name = "listSku",subTasks = 0)
     @Override
     public List<SkuResponse> listByProductCode(String productCode) {
+        try {
+            Thread.sleep(500);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         List<SkuResponse> skuResponses = mockProductSku(productCode);
         //5获取商品sku对应的库存
         List<SkuStockResponse> skuStockResponseList = skuStockService.listByProductCode(productCode);
