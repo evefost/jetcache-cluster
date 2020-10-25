@@ -5,7 +5,7 @@ package jetcache.samples.aop;
 
 import jetcache.samples.AsyContextCallable;
 import jetcache.samples.MultiTaskCallable;
-import jetcache.samples.annotation.AsynTask;
+import jetcache.samples.annotation.MultiTask;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -39,19 +39,19 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 @Aspect
 @Component
-public class AsyTaskOperateAspect {
+public class MultiTaskSynExecuteAspect {
 
     public static ThreadLocal<TaskContext> taskContextHolder = new ThreadLocal<>();
 
-    @Pointcut("@annotation(jetcache.samples.annotation.AsynTask))")
-    public void operate() {
+    @Pointcut("@annotation(jetcache.samples.annotation.MultiTask))")
+    public void executeTask() {
     }
 
-    @Around("operate()")
-    public Object aroundOperate(ProceedingJoinPoint pjp) throws Throwable {
+    @Around("executeTask()")
+    public Object processMultiTaskExecute(ProceedingJoinPoint pjp) throws Throwable {
         MethodSignature sign = (MethodSignature) pjp.getSignature();
         Method method = sign.getMethod();
-        AsynTask annotation = AnnotationUtils.getAnnotation(method, AsynTask.class);
+        MultiTask annotation = AnnotationUtils.getAnnotation(method, MultiTask.class);
         TaskContext taskContext = taskContextHolder.get();
         boolean isTaskEntry = false;
         TaskInfo subTask = null;
@@ -137,7 +137,7 @@ public class AsyTaskOperateAspect {
         }
     }
 
-    private TaskInfo parseSubTask(ProceedingJoinPoint pjp, AsynTask annotation) {
+    private TaskInfo parseSubTask(ProceedingJoinPoint pjp, MultiTask annotation) {
 
         MethodSignature sign = (MethodSignature) pjp.getSignature();
         Method method = sign.getMethod();
@@ -156,12 +156,12 @@ public class AsyTaskOperateAspect {
     }
 
 
-    private void createContext(Method method, AsynTask task) {
+    private void createContext(Method method, MultiTask task) {
         TaskContext context = new TaskContext();
         taskContextHolder.set(context);
-        context.setTotalSubTask(task.subTasks());
+        context.setTotalSubTask(task.subTaskCount());
         context.setHashParent(true);
-        context.setSubTaskInfoList(new ArrayList<>(task.subTasks()));
+        context.setSubTaskInfoList(new ArrayList<>(task.subTaskCount()));
     }
 
 

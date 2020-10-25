@@ -8,7 +8,7 @@ import com.jetcahe.support.annotation.ListCached;
 import com.jetcahe.support.extend.JedisPileLineOperator;
 import jetcache.samples.AsyContextCallable;
 import jetcache.samples.MultiTaskCallable;
-import jetcache.samples.annotation.AsynTask;
+import jetcache.samples.annotation.MultiTask;
 import jetcache.samples.dao.*;
 import jetcache.samples.dto.request.ProductRequest;
 import jetcache.samples.dto.response.ProductResponse;
@@ -20,7 +20,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -169,7 +168,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
 
-    @AsynTask(name = "getProductByCode",subTasks = 2)
+    @MultiTask(name = "getProductByCode",subTaskCount = 2)
     @Override
     public ProductResponse getByProductCode7(String productCode) {
         //1.获取商品主要信息

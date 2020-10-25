@@ -9,7 +9,7 @@ import java.lang.annotation.*;
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
-public @interface AsynTask {
+public @interface MultiTask {
 
     String parentName() default "";
 
@@ -17,5 +17,9 @@ public @interface AsynTask {
 
     String threadPoolName() default "";
 
-    int subTasks();
+    /**
+     * 任务数
+     * @return
+     */
+    int subTaskCount() default 0;
 }

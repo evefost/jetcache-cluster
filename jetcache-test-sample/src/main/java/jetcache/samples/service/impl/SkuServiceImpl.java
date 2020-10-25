@@ -1,6 +1,6 @@
 package jetcache.samples.service.impl;
 
-import jetcache.samples.annotation.AsynTask;
+import jetcache.samples.annotation.MultiTask;
 import jetcache.samples.dto.response.SkuPriceResponse;
 import jetcache.samples.dto.response.SkuResponse;
 import jetcache.samples.dto.response.SkuStockResponse;
@@ -32,7 +32,7 @@ public class SkuServiceImpl implements SkuService {
     @Autowired
     private SkuStockService skuStockService;
 
-    @AsynTask(parentName = "getProductByCode",name = "listSku",subTasks = 0)
+    @MultiTask(parentName = "getProductByCode",name = "listSku")
     @Override
     public List<SkuResponse> listByProductCode(String productCode) {
         try {

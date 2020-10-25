@@ -1,13 +1,10 @@
 package jetcache.samples.service.impl;
 
-import com.alicp.jetcache.anno.CacheType;
-import com.alicp.jetcache.anno.Cached;
-import jetcache.samples.annotation.AsynTask;
+import jetcache.samples.annotation.MultiTask;
 import jetcache.samples.dto.WeworkResponse;
 import jetcache.samples.service.ImageRemoteService;
 import jetcache.samples.service.ProductImageService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.util.MultiValueMap;
@@ -52,7 +49,7 @@ public class ProductImageServiceImpl implements ProductImageService {
 
 
 //    @Cached(name = "product-image",key = "#productCode",expire = 100,cacheType = CacheType.REMOTE,localExpire = 100)
-    @AsynTask(parentName = "getProductByCode",name = "listImage",subTasks = 0)
+    @MultiTask(parentName = "getProductByCode",name = "listImage")
     @Override
     public List<String> listByProductCode(String productCode) {
         try {
