@@ -1,6 +1,7 @@
 package jetcache.samples.service;
 
 import jetcache.samples.dto.request.ProductRequest;
+import jetcache.samples.dto.request.ProductRequest2;
 import jetcache.samples.dto.response.ProductResponse;
 
 import java.util.List;
@@ -8,6 +9,14 @@ import java.util.List;
 public interface ProductService {
 
     ProductResponse getByProductCode(String productCode);
+
+    ProductResponse getByProductCode(String productCode,Integer status);
+
+    ProductResponse getById(Integer productId);
+
+    ProductResponse getById(String productCode,Integer status);
+
+    ProductResponse getProductByParams(ProductRequest2 request);
 
     ProductResponse getByProductCode2(String productCode);
 

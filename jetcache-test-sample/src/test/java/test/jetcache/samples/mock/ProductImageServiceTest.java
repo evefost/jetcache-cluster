@@ -1,7 +1,5 @@
 package test.jetcache.samples.mock;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.TypeReference;
 import com.lingzhi.dubhe.test.InjectUtils;
 import jetcache.samples.dto.WeworkResponse;
 import jetcache.samples.service.ImageRemoteService;

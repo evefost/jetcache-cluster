@@ -43,6 +43,11 @@ public class MultiThreadTest {
         TestResult executeResult = MultiThreadTestUtils.execute(11, 1000, 2000000l, 1150, () -> {
                     synchronized (MultiThreadTest.class) {
                         counter = counter + 1;
+                        try {
+                            Thread.sleep(10);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
                     }
                     try {
                         Thread.sleep(10);

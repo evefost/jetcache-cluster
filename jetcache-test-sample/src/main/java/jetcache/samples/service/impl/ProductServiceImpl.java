@@ -11,6 +11,7 @@ import jetcache.samples.MultiTaskCallable;
 import jetcache.samples.annotation.MultiTask;
 import jetcache.samples.dao.*;
 import jetcache.samples.dto.request.ProductRequest;
+import jetcache.samples.dto.request.ProductRequest2;
 import jetcache.samples.dto.response.ProductResponse;
 import jetcache.samples.dto.response.SkuPriceResponse;
 import jetcache.samples.dto.response.SkuResponse;
@@ -103,6 +104,26 @@ public class ProductServiceImpl implements ProductService {
         }
         productResponse.setSkuResponses(skuResponses);
         return productResponse;
+    }
+
+    @Override
+    public ProductResponse getByProductCode(String productCode, Integer status) {
+        return null;
+    }
+
+    @Override
+    public ProductResponse getById(Integer productId) {
+        return null;
+    }
+
+    @Override
+    public ProductResponse getById(String productCode, Integer status) {
+        return null;
+    }
+
+    @Override
+    public ProductResponse getProductByParams(ProductRequest2 request) {
+        return null;
     }
 
     public ProductResponse getByProductCode5(String productCode) {
