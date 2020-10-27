@@ -1,6 +1,6 @@
 package jetcache.samples.service.impl;
 
-import jetcache.samples.annotation.MultiTask;
+import jetcache.samples.annotation.MultiSyncSubTask;
 import jetcache.samples.dto.WeworkResponse;
 import jetcache.samples.service.ImageRemoteService;
 import jetcache.samples.service.ProductImageService;
@@ -49,7 +49,7 @@ public class ProductImageServiceImpl implements ProductImageService {
 
 
 //    @Cached(name = "product-image",key = "#productCode",expire = 100,cacheType = CacheType.REMOTE,localExpire = 100)
-    @MultiTask(parentName = "getProductByCode",name = "listImage")
+    @MultiSyncSubTask(parentTaskName = "getProductByCode")
     @Override
     public List<String> listByProductCode(String productCode) {
         try {

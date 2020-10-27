@@ -177,8 +177,8 @@ public class ProductServiceImplTest extends BaseServiceTest {
     @Test
     public void getProductByCode7(){
         long s = System.currentTimeMillis();
-        ProductResponse sssss = productService.getByProductCode7("sssss");
-        assert sssss!=null;
+        ProductResponse productResponse = productService.getByProductCode7("sssss");
+        assert productResponse!=null;
         long e = System.currentTimeMillis();
         System.out.println("耗时:"+(e-s));
     }

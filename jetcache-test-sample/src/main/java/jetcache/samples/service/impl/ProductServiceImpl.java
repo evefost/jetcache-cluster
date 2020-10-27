@@ -8,7 +8,8 @@ import com.jetcahe.support.annotation.ListCached;
 import com.jetcahe.support.extend.JedisPileLineOperator;
 import jetcache.samples.AsyContextCallable;
 import jetcache.samples.MultiTaskCallable;
-import jetcache.samples.annotation.MultiTask;
+import jetcache.samples.annotation.MultiSyncSubTask;
+import jetcache.samples.annotation.MultiSyncTaskEntry;
 import jetcache.samples.dao.*;
 import jetcache.samples.dto.request.ProductRequest;
 import jetcache.samples.dto.request.ProductRequest2;
@@ -189,7 +190,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
 
-    @MultiTask(name = "getProductByCode",subTaskCount = 2,threadPoolName = "executorService")
+    @MultiSyncTaskEntry(name = "getProductByCode",subTaskCount = 2,threadPoolName = "executorService")
     @Override
     public ProductResponse getByProductCode7(String productCode) {
         //1.获取商品主要信息

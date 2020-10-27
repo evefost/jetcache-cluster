@@ -5,7 +5,8 @@ package jetcache.samples.aop;
 
 import jetcache.samples.AsyContextCallable;
 import jetcache.samples.MultiTaskCallable;
-import jetcache.samples.annotation.MultiTask;
+import jetcache.samples.annotation.MultiSyncSubTask;
+import jetcache.samples.annotation.MultiSyncTaskEntry;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -13,11 +14,9 @@ import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.annotation.AnnotationUtils;
-import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import java.lang.reflect.Method;
@@ -26,7 +25,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * 异步任务同步返回
@@ -46,40 +44,37 @@ public class MultiTaskSynExecuteAspect implements ApplicationContextAware {
 
     public static ThreadLocal<TaskContext> taskContextHolder = new ThreadLocal<>();
 
-    @Pointcut("@annotation(jetcache.samples.annotation.MultiTask))")
-    public void executeTask() {
+    @Pointcut("@annotation(jetcache.samples.annotation.MultiSyncTaskEntry)")
+    public void multiTaskEntry() {
     }
 
-    private Map<String, ExecutorService> executorService = new ConcurrentHashMap<>();
+    @Pointcut("@annotation(jetcache.samples.annotation.MultiSyncSubTask)")
+    public void subTask() {
+    }
 
-    @Around("executeTask()")
-    public Object processMultiTaskExecute(ProceedingJoinPoint pjp) throws Throwable {
-        MethodSignature sign = (MethodSignature) pjp.getSignature();
-        Method method = sign.getMethod();
-        MultiTask annotation = AnnotationUtils.getAnnotation(method, MultiTask.class);
-        TaskContext taskContext = taskContextHolder.get();
-        boolean isTaskEntry = false;
-        TaskInfo subTask = null;
-        if (StringUtils.isEmpty(annotation.parentName())) {
-            isTaskEntry = true;
-            createContext(method, annotation);
-        } else if (taskContext != null) {
-            subTask = parseSubTask(pjp, annotation);
-        }
+    @Around("multiTaskEntry()")
+    public Object executeMultiTask(ProceedingJoinPoint pjp) throws Throwable {
+        createContext(pjp);
         try {
-            if (isTaskEntry || taskContext == null) {
-                return pjp.proceed();
-            }
-            return invokeSubTask(pjp, subTask);
+            return pjp.proceed();
         } finally {
-            if (isTaskEntry) {
-                taskContextHolder.remove();
-            }
+            taskContextHolder.remove();
         }
     }
 
+    @Around("subTask()")
+    public Object executeSubTask(ProceedingJoinPoint pjp) throws Throwable {
+        TaskContext taskContext = taskContextHolder.get();
+        if (taskContext == null) {
+            //子任务前没有父任务入口，按原来的方式执行
+            return pjp.proceed();
+        }
+        SubTaskInfo subTask = parseSubTask(pjp,taskContext);
+        return invokeSubTask(pjp, subTask);
+    }
 
-    private Object invokeSubTask(ProceedingJoinPoint pjp, TaskInfo task) throws Throwable {
+
+    private Object invokeSubTask(ProceedingJoinPoint pjp, SubTaskInfo task) throws Throwable {
         MethodSignature sign = (MethodSignature) pjp.getSignature();
         Method method = sign.getMethod();
         TaskContext taskContext = taskContextHolder.get();
@@ -100,7 +95,7 @@ public class MultiTaskSynExecuteAspect implements ApplicationContextAware {
         MultiTaskCallable[] allSubTask = createAllSubTask(taskContext);
         AsyContextCallable.submitWithMultiTypeTask(getExecute(taskContext.getThreadPoolName()), allSubTask);
         //返回最后一个任务的结果
-        return taskContext.getLastSubTaskInfo().getResult();
+        return taskContext.getLastSubSubTaskInfo().getResult();
 
     }
 
@@ -111,10 +106,10 @@ public class MultiTaskSynExecuteAspect implements ApplicationContextAware {
 
 
     private MultiTaskCallable[] createAllSubTask(TaskContext taskContext) {
-        List<TaskInfo> subTaskInfoList = taskContext.getSubTaskInfoList();
-        MultiTaskCallable[] taskList = new MultiTaskCallable[subTaskInfoList.size()];
+        List<SubTaskInfo> subSubTaskInfoList = taskContext.getSubSubTaskInfoList();
+        MultiTaskCallable[] taskList = new MultiTaskCallable[subSubTaskInfoList.size()];
         for (int i = 0; i < taskList.length; i++) {
-            taskList[i] = new SubTask("multiSycTask" + i, subTaskInfoList.get(i));
+            taskList[i] = new SubTask("multiSycTask" + i, subSubTaskInfoList.get(i));
         }
         return taskList;
     }
@@ -128,23 +123,21 @@ public class MultiTaskSynExecuteAspect implements ApplicationContextAware {
 
 
     static class SubTask extends MultiTaskCallable {
-        TaskInfo taskInfo;
+        SubTaskInfo SubTaskInfo;
 
-        public SubTask(String taskName, TaskInfo taskInfo) {
+        public SubTask(String taskName, SubTaskInfo SubTaskInfo) {
             super(taskName);
-            this.taskInfo = taskInfo;
+            this.SubTaskInfo = SubTaskInfo;
         }
-
-
         @lombok.SneakyThrows
         @Override
         public Object call() throws Exception {
-            ProceedingJoinPoint joinPoint = taskInfo.getPjp();
+            ProceedingJoinPoint joinPoint = SubTaskInfo.getPjp();
             Object result = joinPoint.proceed();
-            Object targetResult = taskInfo.getResult();
+            Object targetResult = SubTaskInfo.getResult();
             if (result instanceof List) {
                 List listResult = (List) result;
-                List targetListResult = (List) taskInfo.getResult();
+                List targetListResult = (List) SubTaskInfo.getResult();
                 for (Object obj : listResult) {
                     targetListResult.add(obj);
                 }
@@ -155,40 +148,33 @@ public class MultiTaskSynExecuteAspect implements ApplicationContextAware {
         }
     }
 
-    private TaskInfo parseSubTask(ProceedingJoinPoint pjp, MultiTask annotation) {
-
-        MethodSignature sign = (MethodSignature) pjp.getSignature();
-        Method method = sign.getMethod();
-        TaskContext taskContext = taskContextHolder.get();
-        TaskInfo taskInfo = new TaskInfo();
-        taskInfo.setArgs(pjp.getArgs());
-        taskInfo.setMethod(method);
-        taskInfo.setPjp(pjp);
-        taskContext.getSubTaskInfoList().add(taskInfo);
-        if (taskContext.getTotalSubTask() == taskContext.getSubTaskInfoList().size()) {
-            taskInfo.setLastTask(true);
-            taskContext.setLastSubTaskInfo(taskInfo);
+    private SubTaskInfo parseSubTask(ProceedingJoinPoint pjp,TaskContext taskContext) {
+        SubTaskInfo SubTaskInfo = new SubTaskInfo();
+        SubTaskInfo.setPjp(pjp);
+        taskContext.getSubSubTaskInfoList().add(SubTaskInfo);
+        if (taskContext.getTotalSubTask() == taskContext.getSubSubTaskInfoList().size()) {
+            SubTaskInfo.setLastTask(true);
+            taskContext.setLastSubSubTaskInfo(SubTaskInfo);
         }
-
-        return taskInfo;
+        return SubTaskInfo;
     }
 
 
-    private void createContext(Method method, MultiTask task) {
+    private void createContext(ProceedingJoinPoint pjp) {
+        MethodSignature sign = (MethodSignature) pjp.getSignature();
+        Method method = sign.getMethod();
+        MultiSyncTaskEntry taskEntry = AnnotationUtils.getAnnotation(method, MultiSyncTaskEntry.class);
         TaskContext context = new TaskContext();
         taskContextHolder.set(context);
-        context.setTotalSubTask(task.subTaskCount());
-        context.setHashParent(true);
-        context.setSubTaskInfoList(new ArrayList<>(task.subTaskCount()));
-        context.setThreadPoolName(task.threadPoolName());
+        context.setTotalSubTask(taskEntry.subTaskCount());
+        context.setSubSubTaskInfoList(new ArrayList<>(taskEntry.subTaskCount()));
+        context.setThreadPoolName(taskEntry.threadPoolName());
     }
 
 
     static class TaskContext {
 
         private int totalSubTask;
-
-        private boolean hashParent;
 
         private String threadPoolName;
 
@@ -200,24 +186,16 @@ public class MultiTaskSynExecuteAspect implements ApplicationContextAware {
             this.threadPoolName = threadPoolName;
         }
 
-        private List<TaskInfo> subTaskInfoList;
+        private List<SubTaskInfo> subSubTaskInfoList;
 
-        private TaskInfo lastSubTaskInfo;
+        private SubTaskInfo lastSubSubTaskInfo;
 
-        public boolean isHashParent() {
-            return hashParent;
+        public SubTaskInfo getLastSubSubTaskInfo() {
+            return lastSubSubTaskInfo;
         }
 
-        public void setHashParent(boolean hashParent) {
-            this.hashParent = hashParent;
-        }
-
-        public TaskInfo getLastSubTaskInfo() {
-            return lastSubTaskInfo;
-        }
-
-        public void setLastSubTaskInfo(TaskInfo lastSubTaskInfo) {
-            this.lastSubTaskInfo = lastSubTaskInfo;
+        public void setLastSubSubTaskInfo(SubTaskInfo lastSubSubTaskInfo) {
+            this.lastSubSubTaskInfo = lastSubSubTaskInfo;
         }
 
         public int getTotalSubTask() {
@@ -228,23 +206,19 @@ public class MultiTaskSynExecuteAspect implements ApplicationContextAware {
             this.totalSubTask = totalSubTask;
         }
 
-        public List<TaskInfo> getSubTaskInfoList() {
-            return subTaskInfoList;
+        public List<SubTaskInfo> getSubSubTaskInfoList() {
+            return subSubTaskInfoList;
         }
 
-        public void setSubTaskInfoList(List<TaskInfo> subTaskInfoList) {
-            this.subTaskInfoList = subTaskInfoList;
+        public void setSubSubTaskInfoList(List<SubTaskInfo> subSubTaskInfoList) {
+            this.subSubTaskInfoList = subSubTaskInfoList;
         }
     }
 
 
-    static class TaskInfo {
+    static class SubTaskInfo {
 
         private String name;
-
-        private Method method;
-
-        private Object[] args;
 
         private Object result;
 
@@ -282,22 +256,6 @@ public class MultiTaskSynExecuteAspect implements ApplicationContextAware {
 
         public void setResult(Object result) {
             this.result = result;
-        }
-
-        public Method getMethod() {
-            return method;
-        }
-
-        public void setMethod(Method method) {
-            this.method = method;
-        }
-
-        public Object[] getArgs() {
-            return args;
-        }
-
-        public void setArgs(Object[] args) {
-            this.args = args;
         }
     }
 
