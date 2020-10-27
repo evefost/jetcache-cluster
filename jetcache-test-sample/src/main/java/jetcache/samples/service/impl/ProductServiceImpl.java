@@ -189,7 +189,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
 
-    @MultiTask(name = "getProductByCode",subTaskCount = 2)
+    @MultiTask(name = "getProductByCode",subTaskCount = 2,threadPoolName = "executorService")
     @Override
     public ProductResponse getByProductCode7(String productCode) {
         //1.获取商品主要信息

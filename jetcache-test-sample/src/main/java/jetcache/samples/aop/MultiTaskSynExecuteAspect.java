@@ -12,6 +12,10 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -38,14 +42,15 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 
 @Aspect
-@Component
-public class MultiTaskSynExecuteAspect {
+public class MultiTaskSynExecuteAspect implements ApplicationContextAware {
 
     public static ThreadLocal<TaskContext> taskContextHolder = new ThreadLocal<>();
 
     @Pointcut("@annotation(jetcache.samples.annotation.MultiTask))")
     public void executeTask() {
     }
+
+    private Map<String, ExecutorService> executorService = new ConcurrentHashMap<>();
 
     @Around("executeTask()")
     public Object processMultiTaskExecute(ProceedingJoinPoint pjp) throws Throwable {
@@ -58,11 +63,11 @@ public class MultiTaskSynExecuteAspect {
         if (StringUtils.isEmpty(annotation.parentName())) {
             isTaskEntry = true;
             createContext(method, annotation);
-        } else if(taskContext != null){
+        } else if (taskContext != null) {
             subTask = parseSubTask(pjp, annotation);
         }
         try {
-            if (isTaskEntry || taskContext==null) {
+            if (isTaskEntry || taskContext == null) {
                 return pjp.proceed();
             }
             return invokeSubTask(pjp, subTask);
@@ -93,10 +98,15 @@ public class MultiTaskSynExecuteAspect {
         }
         //等到最后一个子任务再执行
         MultiTaskCallable[] allSubTask = createAllSubTask(taskContext);
-        AsyContextCallable.submitWithMultiTypeTask(executorService(), allSubTask);
+        AsyContextCallable.submitWithMultiTypeTask(getExecute(taskContext.getThreadPoolName()), allSubTask);
         //返回最后一个任务的结果
         return taskContext.getLastSubTaskInfo().getResult();
 
+    }
+
+    private ExecutorService getExecute(String threadPoolName) {
+        ExecutorService executorService = (ExecutorService) applicationContext.getBean(threadPoolName);
+        return executorService;
     }
 
 
@@ -108,6 +118,14 @@ public class MultiTaskSynExecuteAspect {
         }
         return taskList;
     }
+
+    private ApplicationContext applicationContext;
+
+    @Override
+    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+        this.applicationContext = applicationContext;
+    }
+
 
     static class SubTask extends MultiTaskCallable {
         TaskInfo taskInfo;
@@ -162,6 +180,7 @@ public class MultiTaskSynExecuteAspect {
         context.setTotalSubTask(task.subTaskCount());
         context.setHashParent(true);
         context.setSubTaskInfoList(new ArrayList<>(task.subTaskCount()));
+        context.setThreadPoolName(task.threadPoolName());
     }
 
 
@@ -171,6 +190,15 @@ public class MultiTaskSynExecuteAspect {
 
         private boolean hashParent;
 
+        private String threadPoolName;
+
+        public String getThreadPoolName() {
+            return threadPoolName;
+        }
+
+        public void setThreadPoolName(String threadPoolName) {
+            this.threadPoolName = threadPoolName;
+        }
 
         private List<TaskInfo> subTaskInfoList;
 
@@ -273,26 +301,5 @@ public class MultiTaskSynExecuteAspect {
         }
     }
 
-    private ExecutorService executorService;
 
-
-    ExecutorService executorService() {
-        if (executorService != null) {
-            return executorService;
-        }
-        return newExecutorService(100, 1000);
-    }
-
-    private static ExecutorService newExecutorService(int poolSize, int queueSize) {
-        LinkedBlockingQueue taskQueue = new LinkedBlockingQueue<>(queueSize);
-        ThreadPoolExecutor poolExecutor = new ThreadPoolExecutor(poolSize, poolSize, 2, TimeUnit.SECONDS, taskQueue, new ThreadFactory() {
-            private AtomicInteger threadIndex = new AtomicInteger(0);
-
-            @Override
-            public Thread newThread(Runnable runnable) {
-                return new Thread(runnable, "TestThread-" + threadIndex.getAndIncrement());
-            }
-        });
-        return poolExecutor;
-    }
 }

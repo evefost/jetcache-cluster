@@ -65,7 +65,8 @@ public class ProductImageServiceTest extends BaseServiceTest {
             response.setUserName("lingzhi");
             ResponseEntity<WeworkResponse> responseEntity = new ResponseEntity<>(response,HttpStatus.OK);
             return responseEntity;
-        });WeworkResponse body1 = productImageService.requestWework();
+        });
+        WeworkResponse body1 = productImageService.requestWework();
         assert body1 != null;
     }
 
@@ -81,7 +82,7 @@ public class ProductImageServiceTest extends BaseServiceTest {
             return images;
         });
         List<String> abc = spy.listByProductCode2("abc");
-        assert abc.size() == 2;
+        assert abc.size() == 0;
         List<String> images = spy.listByProductCode2("123");
         assert images.size() == 1;
         reset(spy);

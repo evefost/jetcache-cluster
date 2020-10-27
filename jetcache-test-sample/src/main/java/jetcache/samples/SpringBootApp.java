@@ -7,6 +7,7 @@ import com.alicp.jetcache.anno.config.EnableCreateCacheAnnotation;
 import com.alicp.jetcache.anno.config.EnableMethodCache;
 import com.alicp.jetcache.autoconfigure.JetCacheAutoConfiguration;
 import com.jetcahe.support.annotation.EnableExtendCache;
+import jetcache.samples.aop.MultiTaskSynExecuteAspect;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -58,5 +59,13 @@ public class SpringBootApp {
         });
         return poolExecutor;
     }
+
+    @Bean
+    MultiTaskSynExecuteAspect multiTaskSynExecuteAspect(){
+        return new MultiTaskSynExecuteAspect();
+    }
+
+
+
 
 }
